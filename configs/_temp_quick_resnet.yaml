@@ -1,0 +1,76 @@
+datasets:
+  population_a:
+    ann_file: data/gzgc.coco/annotations/instances_train2020.json
+    format: coco_gzgc
+    image_dir: data/gzgc.coco/images/train2020
+    license: CDLA-Permissive-1.0
+    n_annotations: 6286
+    n_individuals: 1905
+    name: GZGC
+    root: data/gzgc.coco
+    species: plains_zebra
+  population_b:
+    format: folder_per_individual
+    n_images: 685
+    n_individuals: 173
+    name: LabeledMpalaGrevys
+    root: data/labeled_mpala_grevys
+    species: grevys_zebra
+  split_seed: 42
+  test_ratio: 0.15
+  train_ratio: 0.7
+  val_ratio: 0.15
+edge:
+  benchmark_n_trials: 100
+  onnx_opset: 17
+  platform_note: "Mac mini CPU proxy \u2014 re-run on Raspberry Pi 5 / Jetson Orin\
+    \ Nano when hardware is available"
+  quantize_int8: true
+federation:
+  api_key_env_var: ZEBRAID_API_KEY
+  coordinator_port: 8000
+  org_a_port: 8001
+  org_b_port: 8002
+  rate_limit_queries_per_minute: 60
+  score_buckets:
+    no_match: 0.5
+    possible_match: 0.75
+    strong_match: 1.0
+matching:
+  confidence_threshold: 0.75
+  index_type: flat_l2
+  scale_sim_sizes:
+  - 1000
+  - 100000
+  - 1000000
+  top_k: 5
+model:
+  ablation_backbone: resnet50
+  embedding_dim: 512
+  primary_backbone: MegaDescriptor-L-384
+paths:
+  checkpoint_dir: checkpoints
+  data_root: data/raw
+  processed_root: data/processed
+  results_dir: results
+training:
+  accum_steps: 4
+  batch_size: 4
+  learning_rate: 0.0001
+  loss: triplet
+  mixed_batch_ratio: 0.5
+  num_epochs: 3
+  num_train_splits: 5
+  triplet_margin: 0.3
+  triplet_mining: hard
+  use_wandb: false
+  wandb_project: zebraid
+  weight_decay: 0.0001
+zhash:
+  backend: pca_binarize
+  benchmark_sizes_bits:
+  - 128
+  - 256
+  - 512
+  deploy_size_bits: 256
+  pq_num_subquantizers: 16

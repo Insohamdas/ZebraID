@@ -1,0 +1,88 @@
+# ZebraID — Default Configuration
+# Override any value by passing --config <path> to the training scripts
+# or by setting the corresponding environment variable.
+
+# ── Paths ───────────────────────────────────────────────────────────────────
+paths:
+  data_root: "data/raw"
+  processed_root: "data/processed"
+  checkpoint_dir: "checkpoints"
+  results_dir: "results"
+
+# ── Datasets ─────────────────────────────────────────────────────────────────
+datasets:
+  population_a:
+    name: "GZGC"
+    root: "data/gzgc.coco"
+    ann_file: "data/gzgc.coco/annotations/instances_train2020.json"
+    image_dir: "data/gzgc.coco/images/train2020"
+    format: "coco_gzgc"              # uses GZGCDataset loader
+    species: "plains_zebra"
+    license: "CDLA-Permissive-1.0"   # cite: Parham et al. 2017
+    n_individuals: 1905
+    n_annotations: 6286
+  population_b:
+    name: "LabeledMpalaGrevys"
+    root: "data/labeled_mpala_grevys"
+    format: "folder_per_individual"  # uses GrevysDataset loader
+    species: "grevys_zebra"
+    n_individuals: 173
+    n_images: 685
+  split_seed: 42
+  train_ratio: 0.7
+  val_ratio: 0.15
+  test_ratio: 0.15
+
+# ── Model ─────────────────────────────────────────────────────────────────────
+model:
+  primary_backbone: "MegaDescriptor-L-384"  # wildlife-datasets pretrained
+  ablation_backbone: "resnet50"              # timm pretrained on ImageNet
+  embedding_dim: 512                         # backbone output dimension
+
+# ── Z-Hash ─────────────────────────────────────────────────────────────────
+zhash:
+  deploy_size_bits: 256                      # production Z-Hash size
+  benchmark_sizes_bits: [128, 256, 512]      # sweep for accuracy-vs-size curve
+  backend: "pca_binarize"                    # options: pca_binarize | faiss_pq
+  pq_num_subquantizers: 16                   # only used when backend=faiss_pq
+
+# ── Training ──────────────────────────────────────────────────────────────────
+training:
+  batch_size: 4                              # micro-batch per GPU step (T4-safe for 384x384)
+  accum_steps: 4                             # gradient accumulation → effective batch = 4×4 = 16
+  num_epochs: 30
+  learning_rate: 1.0e-4
+  weight_decay: 1.0e-4
+  loss: "triplet"                            # options: triplet | arcface
+  triplet_margin: 0.3
+  triplet_mining: "hard"
+  mixed_batch_ratio: 0.5                     # fraction of batch from population A
+  num_train_splits: 5                        # multi-split for mean±std reporting
+  use_wandb: false                           # set true to enable W&B tracking
+  wandb_project: "zebraid"
+
+# ── Matching ──────────────────────────────────────────────────────────────────
+matching:
+  index_type: "flat_l2"                      # options: flat_l2 | ivf_pq | hnsw
+  top_k: 5
+  confidence_threshold: 0.75                 # below this → NEEDS_REVIEW
+  scale_sim_sizes: [1000, 100000, 1000000]   # phantom-vector scale benchmark points
+
+# ── Federated demo ────────────────────────────────────────────────────────────
+federation:
+  org_a_port: 8001
+  org_b_port: 8002
+  coordinator_port: 8000
+  score_buckets:                             # score quantization thresholds
+    no_match: 0.5
+    possible_match: 0.75
+    strong_match: 1.0
+  rate_limit_queries_per_minute: 60
+  api_key_env_var: "ZEBRAID_API_KEY"         # set in .env
+
+# ── Edge (CPU-proxy on Mac mini) ─────────────────────────────────────────────
+edge:
+  onnx_opset: 17
+  quantize_int8: true
+  benchmark_n_trials: 100
+  platform_note: "Mac mini CPU proxy — re-run on Raspberry Pi 5 / Jetson Orin Nano when hardware is available"

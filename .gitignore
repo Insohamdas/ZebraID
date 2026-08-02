@@ -1,0 +1,58 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_metadata
+.pytest_cache/
+
+# Data (downloaded separately — see data/download_*.sh)
+datasets/
+data/
+images/
+data/raw/
+data/processed/
+*.tar.gz
+*.zip
+
+# Model checkpoints (large files — store in W&B or cloud)
+checkpoints/
+*.ckpt
+*.pt
+*.pth
+*.onnx
+*.engine
+
+# Results (generated, not committed — commit only final summary CSVs)
+results/
+results/*.json
+results/*.pkl
+
+# Environment / secrets
+.env
+*.env.local
+
+# Mac OS
+.DS_Store
+
+# Weights & Biases
+wandb/
+
+# Editor
+.vscode/
+.idea/
+*.swp

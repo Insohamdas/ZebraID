@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "zebraid"
+version = "0.1.0"
+description = "Stripe-based biometric identification system for individual zebra recognition at continental scale"
+authors = [
+    {name = "Soham Das", email = "soham@agriscore.in"}
+]
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["zebraid*"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::Warning",
+]
+markers = [
+    "integration: requires two local FastAPI services to be running",
+]

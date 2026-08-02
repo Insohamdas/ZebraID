@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ZebraID — Federated Stripe Biometric Demo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0a0b0f;
+      --surface: #111318;
+      --surface2: #1a1d26;
+      --border: #2a2d3a;
+      --accent: #6c63ff;
+      --accent2: #00d4aa;
+      --warn: #f59e0b;
+      --danger: #ef4444;
+      --text: #e8eaf0;
+      --muted: #6b7280;
+      --radius: 12px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    .header {
+      background: linear-gradient(135deg, #0a0b0f 0%, #1a1040 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 24px 40px;
+      display: flex; align-items: center; gap: 16px;
+    }
+    .logo {
+      font-size: 28px; font-weight: 700; letter-spacing: -0.5px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .badge {
+      background: rgba(108,99,255,0.15);
+      border: 1px solid rgba(108,99,255,0.4);
+      border-radius: 6px; padding: 4px 10px;
+      font-size: 11px; font-weight: 600; color: var(--accent);
+      letter-spacing: 0.5px;
+    }
+    .subtitle { color: var(--muted); font-size: 13px; margin-left: auto; }
+
+    /* ── Layout ── */
+    .main { max-width: 1100px; margin: 0 auto; padding: 40px 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    @media (max-width: 768px) { .main { grid-template-columns: 1fr; } }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+    }
+    .card-title {
+      font-size: 13px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 1px; color: var(--muted); margin-bottom: 20px;
+    }
+
+    /* ── Upload zone ── */
+    .upload-zone {
+      border: 2px dashed var(--border);
+      border-radius: 10px; padding: 40px;
+      text-align: center; cursor: pointer;
+      transition: all 0.2s;
+    }
+    .upload-zone:hover, .upload-zone.dragover {
+      border-color: var(--accent);
+      background: rgba(108,99,255,0.05);
+    }
+    .upload-icon { font-size: 40px; margin-bottom: 12px; }
+    .upload-text { color: var(--muted); font-size: 14px; }
+    .upload-text span { color: var(--accent); font-weight: 500; }
+    #fileInput { display: none; }
+    #preview { width: 100%; border-radius: 8px; margin-top: 16px; display: none; max-height: 300px; object-fit: contain; }
+
+    /* ── Toggle ── */
+    .toggle-row {
+      display: flex; align-items: center; gap: 12px; margin: 16px 0;
+      font-size: 14px;
+    }
+    .toggle {
+      position: relative; width: 44px; height: 24px;
+      background: var(--border); border-radius: 12px; cursor: pointer;
+      transition: background 0.2s;
+    }
+    .toggle.on { background: var(--accent); }
+    .toggle::after {
+      content: ''; position: absolute; top: 2px; left: 2px;
+      width: 20px; height: 20px; background: white; border-radius: 50%;
+      transition: transform 0.2s;
+    }
+    .toggle.on::after { transform: translateX(20px); }
+
+    /* ── Button ── */
+    .btn {
+      width: 100%; padding: 14px; border: none; border-radius: 10px;
+      font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 600;
+      cursor: pointer; transition: all 0.2s; margin-top: 16px;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), #8b5cf6);
+      color: white;
+    }
+    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    /* ── Pipeline steps ── */
+    .pipeline { display: flex; flex-direction: column; gap: 8px; margin-bottom: 24px; }
+    .step {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 14px; border-radius: 8px;
+      background: var(--surface2); border: 1px solid transparent;
+      font-size: 13px; transition: all 0.3s;
+    }
+    .step.active { border-color: var(--accent); background: rgba(108,99,255,0.08); }
+    .step.done { border-color: var(--accent2); background: rgba(0,212,170,0.06); }
+    .step-icon { font-size: 16px; width: 24px; text-align: center; }
+    .step-label { flex: 1; font-weight: 500; }
+    .step-value { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); }
+
+    /* ── Match result ── */
+    .match-card {
+      border-radius: 10px; padding: 16px; margin-bottom: 12px;
+      border: 1px solid var(--border);
+    }
+    .match-card.strong { border-color: var(--accent2); background: rgba(0,212,170,0.06); }
+    .match-card.possible { border-color: var(--warn); background: rgba(245,158,11,0.06); }
+    .match-card.no-match { border-color: var(--border); background: var(--surface2); }
+    .match-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+    .match-org { font-size: 12px; font-weight: 600; color: var(--muted); }
+    .bucket-pill {
+      padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+    .bucket-pill.STRONG_MATCH { background: rgba(0,212,170,0.2); color: var(--accent2); }
+    .bucket-pill.POSSIBLE_MATCH { background: rgba(245,158,11,0.2); color: var(--warn); }
+    .bucket-pill.NO_MATCH { background: rgba(107,114,128,0.2); color: var(--muted); }
+    .match-meta { font-size: 12px; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+
+    /* ── Audit trail ── */
+    .audit-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px;
+    }
+    .audit-row:last-child { border-bottom: none; }
+    .audit-label { color: var(--muted); }
+    .audit-value { font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+    .check { color: var(--accent2); font-weight: 700; }
+    .cross { color: var(--danger); }
+
+    /* ── Spinner ── */
+    .spinner {
+      width: 20px; height: 20px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: inline-block; vertical-align: middle; margin-right: 8px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">ZebraID</div>
+    <div class="badge">PROTOTYPE</div>
+    <div class="subtitle">Stripe biometric · Federated matching · Privacy-preserving</div>
+  </div>
+
+  <div class="main">
+    <!-- Left: Upload + Controls -->
+    <div>
+      <div class="card">
+        <div class="card-title">Upload Zebra Image</div>
+        <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+          <div class="upload-icon">🦓</div>
+          <div class="upload-text">Drop image here or <span>click to browse</span></div>
+          <input type="file" id="fileInput" accept="image/*" />
+        </div>
+        <img id="preview" alt="Preview" />
+
+        <div class="toggle-row" style="margin-top: 20px;">
+          <div class="toggle" id="fedToggle" onclick="toggleFed()"></div>
+          <span>Query Org B (federated cross-match)</span>
+        </div>
+        <div style="font-size: 12px; color: var(--muted); padding: 6px 0 0 56px;">
+          Only a <strong style="color:var(--accent2)">32-byte Z-Hash</strong> crosses the boundary — no image, no GPS.
+        </div>
+
+        <button class="btn btn-primary" id="identifyBtn" onclick="identify()" disabled>
+          Identify Zebra
+        </button>
+      </div>
+    </div>
+
+    <!-- Right: Pipeline + Results -->
+    <div>
+      <div class="card" style="margin-bottom: 24px;">
+        <div class="card-title">Pipeline</div>
+        <div class="pipeline" id="pipeline">
+          <div class="step" id="s1"><div class="step-icon">📸</div><div class="step-label">Image received</div><div class="step-value" id="s1v">—</div></div>
+          <div class="step" id="s2"><div class="step-icon">🧠</div><div class="step-label">Embedding (MegaDescriptor)</div><div class="step-value" id="s2v">—</div></div>
+          <div class="step" id="s3"><div class="step-icon">🔑</div><div class="step-label">Z-Hash (256-bit)</div><div class="step-value" id="s3v">—</div></div>
+          <div class="step" id="s4"><div class="step-icon">🔍</div><div class="step-label">Local match (Org A)</div><div class="step-value" id="s4v">—</div></div>
+          <div class="step" id="s5"><div class="step-icon">🌐</div><div class="step-label">Federated match (Org B)</div><div class="step-value" id="s5v">skipped</div></div>
+        </div>
+      </div>
+
+      <div class="card" id="resultsCard" style="display:none;">
+        <div class="card-title" style="display: flex; justify-content: space-between; align-items: center;">
+          <span>Match Results & Species Detection</span>
+          <button class="btn" onclick="downloadReport()" style="padding: 6px 12px; font-size: 12px; background: var(--accent2); color: #000; font-weight: 600;">📄 Export PDF Report</button>
+        </div>
+        <div id="matchResults"></div>
+      </div>
+
+      <!-- Advanced Feature 1: Stripe Feature Attention Heatmap -->
+      <div class="card" id="heatmapCard" style="display:none; margin-top: 24px;">
+        <div class="card-title">🔥 Neural Stripe Feature Attention Heatmap</div>
+        <div style="text-align: center;">
+          <img id="heatmapImg" style="max-width: 100%; border-radius: 8px; border: 1px solid var(--border);" alt="Stripe Feature Heatmap" />
+          <div style="font-size: 12px; color: var(--muted); margin-top: 8px;">
+            Neon gradient highlights unique biometric stripe pattern activations used for matching.
+          </div>
+        </div>
+      </div>
+
+      <!-- Advanced Feature 2: Geospatial Migration Analytics -->
+      <div class="card" id="geoCard" style="display:none; margin-top: 24px;">
+        <div class="card-title">🌐 Geospatial Migration & Movement Analytics</div>
+        <div id="geoContent"></div>
+      </div>
+
+      <div class="card" id="auditCard" style="display:none; margin-top: 24px;">
+        <div class="card-title">Privacy Audit Trail</div>
+        <div id="auditContent"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let fedEnabled = false;
+
+    function toggleFed() {
+      fedEnabled = !fedEnabled;
+      document.getElementById('fedToggle').classList.toggle('on', fedEnabled);
+    }
+
+    const fileInput = document.getElementById('fileInput');
+    const preview   = document.getElementById('preview');
+    const identBtn  = document.getElementById('identifyBtn');
+
+    fileInput.addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      preview.src = URL.createObjectURL(file);
+      preview.style.display = 'block';
+      identBtn.disabled = false;
+    });
+
+    // Drag and drop
+    const zone = document.getElementById('uploadZone');
+    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+    zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+    zone.addEventListener('drop', e => {
+      e.preventDefault(); zone.classList.remove('dragover');
+      fileInput.files = e.dataTransfer.files;
+      fileInput.dispatchEvent(new Event('change'));
+    });
+
+    function setStep(id, state, value) {
+      const el = document.getElementById(id);
+      el.classList.remove('active', 'done');
+      if (state) el.classList.add(state);
+      if (value !== undefined) document.getElementById(id + 'v').textContent = value;
+    }
+
+    async function identify() {
+      const file = fileInput.files[0];
+      if (!file) return;
+
+      identBtn.disabled = true;
+      identBtn.innerHTML = '<span class="spinner"></span> Processing...';
+
+      // Reset pipeline
+      ['s1','s2','s3','s4','s5'].forEach(id => setStep(id, null, '—'));
+      document.getElementById('resultsCard').style.display = 'none';
+      document.getElementById('auditCard').style.display   = 'none';
+
+      setStep('s1', 'active', 'loading...');
+
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('query_org_b', fedEnabled);
+
+      try {
+        const resp = await fetch('/identify', { method: 'POST', body: formData });
+        const data = await resp.json();
+
+        if (data.error) {
+          alert(data.error);
+          identBtn.disabled = false;
+          identBtn.innerHTML = 'Identify Zebra';
+          return;
+        }
+
+        const p = data.pipeline;
+        const l = data.local_match;
+        const f = data.federated_match;
+        const a = data.audit;
+
+        setStep('s1', 'done', `${p.image_size[0]}×${p.image_size[1]}px`);
+        setStep('s2', 'done', `${p.embedding_dim}-d · norm=${p.embedding_norm}`);
+        setStep('s3', 'done', `${p.z_hash_payload_bytes}B · ${p.z_hash_hex}`);
+        setStep('s4', 'done', `${l.match_bucket} · ${l.latency_ms}ms`);
+        setStep('s5', fedEnabled ? 'done' : null,
+          fedEnabled && f ? `${f.match_bucket} · ${f.latency_ms}ms` : 'skipped');
+
+        // Match results
+        window.lastIdentifyData = data;
+        const resultsCard = document.getElementById('resultsCard');
+        resultsCard.style.display = 'block';
+        let html = '';
+        if (data.detections && data.detections.length) {
+          data.detections.forEach(det => {
+            html += renderMatch(det.organization_shard, det.match_confidence, det.individual_id, l.query_id, l.latency_ms, det.species_name, det.species_confidence);
+          });
+        } else {
+          html = renderMatch('Org A (Local)', l.match_bucket, l.record_id, l.query_id, l.latency_ms, l.species || 'Plains Zebra', 0.95);
+        }
+        document.getElementById('matchResults').innerHTML = html;
+
+        // Render Heatmap & Geo Analytics
+        if (data.detections && data.detections[0]) {
+          const firstDet = data.detections[0];
+          if (firstDet.heatmap_b64) {
+            document.getElementById('heatmapCard').style.display = 'block';
+            document.getElementById('heatmapImg').src = firstDet.heatmap_b64;
+          }
+
+          if (firstDet.geo_analytics) {
+            const geo = firstDet.geo_analytics;
+            document.getElementById('geoCard').style.display = 'block';
+            document.getElementById('geoContent').innerHTML = `
+              <div class="audit-row"><span class="audit-label">Individual ID</span><span class="audit-value"><code>${geo.individual_id}</code></span></div>
+              <div class="audit-row"><span class="audit-label">Historical Sightings</span><span class="audit-value">${geo.total_sightings} sightings</span></div>
+              <div class="audit-row"><span class="audit-label">Estimated Home Range</span><span class="audit-value">${geo.estimated_range_km2} km²</span></div>
+              <div class="audit-row"><span class="audit-label">Cross-Park Migrations</span><span class="audit-value" style="color: var(--accent2); font-weight: 600;">${geo.cross_park_migrations} migrations (Org A ↔ Org B)</span></div>
+              <div class="audit-row"><span class="audit-label">Privacy Verification</span><span class="audit-value check">✅ ${geo.privacy_status}</span></div>
+            `;
+          }
+        }
+        document.getElementById('auditContent').innerHTML = `
+          <div class="audit-row">
+            <span class="audit-label">Total pipeline</span>
+            <span class="audit-value">${a.total_pipeline_ms} ms</span>
+          </div>
+          <div class="audit-row">
+            <span class="audit-label">Bytes sent to Org B</span>
+            <span class="audit-value">${fedEnabled ? a.bytes_sent_to_org_b + ' bytes (Z-Hash only)' : 'none (not queried)'}</span>
+          </div>
+          <div class="audit-row">
+            <span class="audit-label">Raw image transmitted to Org B</span>
+            <span class="audit-value ${a.raw_image_sent_to_org_b ? 'cross' : 'check'}">${a.raw_image_sent_to_org_b ? '❌ YES — VIOLATION' : '✅ NO'}</span>
+          </div>
+          <div class="audit-row">
+            <span class="audit-label">GPS data transmitted to Org B</span>
+            <span class="audit-value ${a.gps_sent_to_org_b ? 'cross' : 'check'}">${a.gps_sent_to_org_b ? '❌ YES — VIOLATION' : '✅ NO'}</span>
+          </div>
+          <div class="audit-row">
+            <span class="audit-label">Query ID (Org A)</span>
+            <span class="audit-value">${l.query_id || '—'}</span>
+          </div>
+          ${fedEnabled && f ? `<div class="audit-row">
+            <span class="audit-label">Query ID (Org B)</span>
+            <span class="audit-value">${f.query_id || '—'}</span>
+          </div>` : ''}
+        `;
+
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+
+      identBtn.disabled = false;
+      identBtn.innerHTML = 'Identify Zebra';
+    }
+
+    function bucketClass(bucket) {
+      if (bucket === 'STRONG_MATCH') return 'strong';
+      if (bucket === 'POSSIBLE_MATCH') return 'possible';
+      return 'no-match';
+    }
+
+    function renderMatch(org, bucket, recordId, queryId, latency, species, speciesConf) {
+      const badgeColor = species === "Grevy's Zebra" ? "#00d4aa" : "#6c63ff";
+      return `
+        <div class="match-card ${bucketClass(bucket)}" style="margin-bottom: 12px; border-left: 4px solid ${badgeColor};">
+          <div class="match-header">
+            <div>
+              <span class="match-org">${org}</span>
+              <span style="font-size: 11px; margin-left: 8px; padding: 2px 8px; border-radius: 4px; background: ${badgeColor}22; color: ${badgeColor}; font-weight: 600;">
+                🦓 ${species || 'Plains Zebra'} (${Math.round((speciesConf || 0.92)*100)}%)
+              </span>
+            </div>
+            <span class="bucket-pill ${bucket}">${bucket.replace('_', ' ')}</span>
+          </div>
+          <div class="match-meta" style="margin-top: 6px;">
+            Unique ID: <strong>${recordId || 'INDIV_UNKNOWN'}</strong> · Query: ${queryId || '—'} · ${latency}ms
+          </div>
+        </div>`;
+    }
+
+    async function downloadReport() {
+      if (!window.lastIdentifyData) return;
+      const resp = await fetch('/api/report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(window.lastIdentifyData)
+      });
+      const htmlContent = await resp.text();
+      const win = window.open('', '_blank');
+      win.document.write(htmlContent);
+      win.document.close();
+    }
+  </script>
+</body>
+</html>
