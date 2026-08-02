@@ -20,14 +20,17 @@ env/
 *.ipynb_metadata
 .pytest_cache/
 
-# Data (downloaded separately — see data/download_*.sh)
+# Data (downloaded separately — keep the large datasets out of git)
+data/*
 datasets/
-data/
 images/
-data/raw/
-data/processed/
 *.tar.gz
 *.zip
+
+# Optional tiny helpers/docs inside data/ can still be committed if needed
+!data/.gitkeep
+!data/README.md
+!data/download_*.sh
 
 # Model checkpoints (large files — store in W&B or cloud)
 checkpoints/
