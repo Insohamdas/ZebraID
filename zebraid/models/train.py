@@ -29,6 +29,7 @@ from __future__ import annotations
 import csv
 import json
 import os
+import sys
 import time
 from pathlib import Path
 from typing import Literal, Optional
@@ -44,6 +45,9 @@ from zebraid.data.mixed_batch_sampler import MixedPopulationBatchSampler
 from zebraid.models.backbone import build_embedder
 from zebraid.models.loss import TripletLossWithMining
 from zebraid.models.evaluate import compute_cmc_map
+from zebraid.reporting.experiment_tracker import save_experiment_info
+from zebraid.reporting.research_report import generate_research_report
+
 
 TrainingMode = Literal["baseline_a", "baseline_x", "zebraid"]
 
@@ -57,6 +61,11 @@ def seed_everything(seed: int):
     torch.cuda.manual_seed(seed)
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
+
+def _worker_init_fn(worker_id):
+    worker_seed = torch.initial_seed() % 2**32
+    np.random.seed(worker_seed)
+    random.seed(worker_seed)
 
 # ── Device helpers ────────────────────────────────────────────────────────────
 
@@ -181,11 +190,21 @@ def train(
         / mode / backbone_name / f"seed{split_seed}"
     )
     out_dir.mkdir(parents=True, exist_ok=True)
+    
+    save_experiment_info(
+        out_dir=out_dir, 
+        cfg=cfg, 
+        command_args=sys.argv, 
+        seed=split_seed, 
+        mode=mode, 
+        backbone=backbone_name
+    )
 
     # ── Build datasets ────────────────────────────────────────────────────────
     from zebraid.data.loaders import build_datasets
     img_size = cfg["model"].get("img_size", 384 if backbone_name == "megadescriptor" else 224)
-    t_train  = train_transforms(img_size)
+    use_flip = cfg.get("data", {}).get("use_horizontal_flip", False)
+    t_train  = train_transforms(img_size, use_horizontal_flip=use_flip)
     t_eval   = eval_transforms(img_size)
 
     ds_a_train, ds_b_train = build_datasets("train", transform=t_train, split_seed=split_seed)
@@ -213,6 +232,7 @@ def train(
             pin_memory=pin,
             drop_last=True,
             persistent_workers=(num_workers > 0),
+            worker_init_fn=_worker_init_fn,
         )
     else:  # zebraid — mixed batch
         combined_train = CombinedZebraDataset(ds_a_train, ds_b_train)
@@ -228,6 +248,7 @@ def train(
             num_workers=num_workers,
             pin_memory=pin,
             persistent_workers=(num_workers > 0),
+            worker_init_fn=_worker_init_fn,
         )
 
     # ── Model + optimizer ────────────────────────────────────────────────────
@@ -283,7 +304,7 @@ def train(
     run_name     = f"{mode}_{backbone_name}_seed{split_seed}"
     wandb_run    = _try_init_wandb(cfg, run_name)
     csv_log_path = out_dir / "training_log.csv"
-    csv_fields   = ["epoch", "train_loss", "rank1_a", "rank1_b", "map_a", "map_b", "lr"]
+    csv_fields   = ["epoch", "train_loss", "rank1_a", "rank1_b", "map_a", "map_b", "lr_backbone", "lr_projector"]
 
     with open(csv_log_path, "w", newline="") as f:
         csv.DictWriter(f, fieldnames=csv_fields).writeheader()
@@ -386,7 +407,9 @@ def train(
             else:
                 metrics_b = {"rank1": float("nan"), "map": float("nan")}
 
-        lr = scheduler.get_last_lr()[0]
+        lrs = scheduler.get_last_lr()
+        lr_bb = lrs[0]
+        lr_proj = lrs[1] if len(lrs) > 1 else lrs[0]
 
         def _safe_round(v: float) -> float:
             return round(v, 4) if v == v else float("nan")  # nan check
@@ -398,13 +421,15 @@ def train(
             "rank1_b":    _safe_round(metrics_b["rank1"]),
             "map_a":      _safe_round(metrics_a["map"]),
             "map_b":      _safe_round(metrics_b["map"]),
-            "lr":         lr,
+            "lr_backbone": lr_bb,
+            "lr_projector": lr_proj,
         }
 
         print(
             f"[Epoch {epoch:03d}/{num_epochs}] loss={avg_loss:.4f} "
             f"R1_A={metrics_a['rank1']:.3f} R1_B={metrics_b['rank1']:.3f} "
             f"mAP_A={metrics_a['map']:.3f} mAP_B={metrics_b['map']:.3f} "
+            f"| LR(bb)={lr_bb:.2e} LR(proj)={lr_proj:.2e} "
             f"({elapsed:.1f}s)"
         )
 
@@ -428,9 +453,15 @@ def train(
     )
     model.eval()
     with torch.no_grad():
-        final_a = compute_cmc_map(model, ds_a_val, device, top_k=5)
+        final_a = compute_cmc_map(
+            model, ds_a_val, device, top_k=5, 
+            save_examples_dir=out_dir / "retrieval_examples" / "pop_a"
+        )
         final_b = (
-            compute_cmc_map(model, ds_b_val, device, top_k=5)
+            compute_cmc_map(
+                model, ds_b_val, device, top_k=5,
+                save_examples_dir=out_dir / "retrieval_examples" / "pop_b"
+            )
             if mode in ("baseline_x", "zebraid")
             else {"rank1": float("nan"), "map": float("nan")}
         )
@@ -450,6 +481,10 @@ def train(
         json.dump(result, f, indent=2)
 
     print(f"\n[train] Done. Metrics: {out_dir / 'final_metrics.json'}")
+    
+    # Auto-generate research report and plots
+    generate_research_report(out_dir)
+    
     if wandb_run:
         wandb_run.finish()
 

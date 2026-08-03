@@ -10,6 +10,9 @@ paths:
   results_dir: "results"
 
 # ── Datasets ─────────────────────────────────────────────────────────────────
+data:
+  use_horizontal_flip: false
+
 datasets:
   population_a:
     name: "GZGC"

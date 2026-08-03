@@ -27,47 +27,53 @@ IMAGENET_STD = (0.229, 0.224, 0.225)
 DEFAULT_IMG_SIZE = 384
 
 
-def train_transforms(img_size: int = DEFAULT_IMG_SIZE) -> T.Compose:
+def train_transforms(img_size: int = DEFAULT_IMG_SIZE, use_horizontal_flip: bool = False) -> T.Compose:
     """
     Augmentation pipeline for training.
 
     Simulates realistic field conditions:
       - RandomResizedCrop: partial-flank shots and varying distances.
-      - RandomHorizontalFlip: zebra can face either direction.
+      - RandomHorizontalFlip: (Optional) zebra can face either direction.
       - ColorJitter: variable lighting, time-of-day, camera white balance.
       - GaussianBlur: motion blur from moving animals or camera shake.
       - RandomErasing: mud patches, vegetation occlusion, fence obscuring stripes.
       - Normalize: ImageNet stats (used by both MegaDescriptor and timm ResNet).
     """
-    return T.Compose(
-        [
-            T.RandomResizedCrop(
-                img_size,
-                scale=(0.5, 1.0),        # allow aggressive crops
-                ratio=(0.75, 1.33),
-                interpolation=InterpolationMode.BICUBIC,
-            ),
-            T.ColorJitter(
-                brightness=0.4,
-                contrast=0.4,
-                saturation=0.3,
-                hue=0.05,
-            ),
-            T.RandomApply(
-                [T.GaussianBlur(kernel_size=5, sigma=(0.1, 2.0))], p=0.3
-            ),
-            T.ToTensor(),
-            T.Normalize(mean=IMAGENET_MEAN, std=IMAGENET_STD),
-            # RandomErasing simulates mud / vegetation / fence occlusion
-            T.RandomErasing(
-                p=0.4,
-                scale=(0.02, 0.2),
-                ratio=(0.3, 3.3),
-                value=0,               # erase to black (neutral)
-                inplace=False,
-            ),
-        ]
-    )
+    transforms_list = [
+        T.RandomResizedCrop(
+            img_size,
+            scale=(0.5, 1.0),        # allow aggressive crops
+            ratio=(0.75, 1.33),
+            interpolation=InterpolationMode.BICUBIC,
+        )
+    ]
+    
+    if use_horizontal_flip:
+        transforms_list.append(T.RandomHorizontalFlip(p=0.5))
+        
+    transforms_list.extend([
+        T.ColorJitter(
+            brightness=0.4,
+            contrast=0.4,
+            saturation=0.3,
+            hue=0.05,
+        ),
+        T.RandomApply(
+            [T.GaussianBlur(kernel_size=5, sigma=(0.1, 2.0))], p=0.3
+        ),
+        T.ToTensor(),
+        T.Normalize(mean=IMAGENET_MEAN, std=IMAGENET_STD),
+        # RandomErasing simulates mud / vegetation / fence occlusion
+        T.RandomErasing(
+            p=0.4,
+            scale=(0.02, 0.2),
+            ratio=(0.3, 3.3),
+            value=0,               # erase to black (neutral)
+            inplace=False,
+        ),
+    ])
+    
+    return T.Compose(transforms_list)
 
 
 def eval_transforms(img_size: int = DEFAULT_IMG_SIZE) -> T.Compose:
