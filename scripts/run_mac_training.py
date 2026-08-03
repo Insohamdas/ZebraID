@@ -75,6 +75,7 @@ def run_full_pipeline(
     num_epochs: int = 30,
     fast_mode: bool = False,
     backbone_override: str | None = None,
+    mode_override: str | None = None,
 ):
     """Execute all training runs and compile comparison results."""
     results_dir = REPO_ROOT / "results"
@@ -97,6 +98,12 @@ def run_full_pipeline(
             {"mode": "zebraid",    "backbone": "megadescriptor", "desc": "ZebraID (Mixed A+B -> Both Populations)"},
             {"mode": "zebraid",    "backbone": "resnet50",       "desc": "ResNet-50 Ablation (Mixed A+B)"},
         ]
+
+    if mode_override:
+        experiments = [e for e in experiments if e["mode"] == mode_override]
+        if not experiments:
+            print(f"⚠️ No experiments matched mode '{mode_override}' with current config.")
+            return
 
     for seed in seeds:
         print(f"\n🌱 Executing Training Seed: {seed}")
@@ -168,6 +175,7 @@ def main():
     parser.add_argument("--epochs", type=int, default=30, help="Number of training epochs")
     parser.add_argument("--fast", action="store_true", help="Use lightweight ResNet-50 backbone for fast Mac mini testing")
     parser.add_argument("--backbone", type=str, default=None, choices=["megadescriptor", "resnet50"], help="Backbone model choice")
+    parser.add_argument("--mode", type=str, default=None, choices=["baseline_a", "baseline_x", "zebraid"], help="Run only a specific experiment mode")
     args = parser.parse_args()
 
     os.chdir(REPO_ROOT)
@@ -180,6 +188,7 @@ def main():
         num_epochs=args.epochs,
         fast_mode=args.fast,
         backbone_override=args.backbone,
+        mode_override=args.mode,
     )
 
 
