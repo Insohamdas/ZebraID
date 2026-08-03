@@ -47,7 +47,6 @@ def train_transforms(img_size: int = DEFAULT_IMG_SIZE) -> T.Compose:
                 ratio=(0.75, 1.33),
                 interpolation=InterpolationMode.BICUBIC,
             ),
-            T.RandomHorizontalFlip(p=0.5),
             T.ColorJitter(
                 brightness=0.4,
                 contrast=0.4,

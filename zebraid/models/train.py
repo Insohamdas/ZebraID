@@ -47,6 +47,16 @@ from zebraid.models.evaluate import compute_cmc_map
 
 TrainingMode = Literal["baseline_a", "baseline_x", "zebraid"]
 
+def seed_everything(seed: int):
+    import random
+    import numpy as np
+    random.seed(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
 
 # ── Device helpers ────────────────────────────────────────────────────────────
 
@@ -136,6 +146,8 @@ def train(
     if "epochs" in kwargs and num_epochs is None:
         num_epochs = kwargs["epochs"]
 
+    seed_everything(split_seed)
+
     # ── Set env var to reduce CUDA memory fragmentation ──────────────────────
     os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
 
@@ -189,9 +201,8 @@ def train(
     # ── Build dataloaders ────────────────────────────────────────────────────
     # pin_memory only helps with CUDA; disable for MPS and CPU
     pin = device.type == "cuda"
-    # Use zero worker processes in this environment to avoid shared-memory /
-    # permission errors inside sandboxed terminals. This is slower but stable.
-    num_workers = 0
+    # Use 2 workers to keep the GPU fed with data
+    num_workers = 2
 
     if mode in ("baseline_a", "baseline_x"):
         train_loader = DataLoader(
