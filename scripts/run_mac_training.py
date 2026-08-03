@@ -166,12 +166,19 @@ def run_full_pipeline(
     print(f"   • {csv_path}")
     print(f"   • {json_path}")
     print("=" * 65)
+    
+    # ── Paper Tables Generation ──
+    print("\n📝 Generating Statistical Paper Tables...")
+    try:
+        subprocess.run([sys.executable, "scripts/generate_paper_tables.py"], check=True)
+    except Exception as e:
+        print(f"⚠️ Failed to generate paper tables: {e}")
 
 
 def main():
     parser = argparse.ArgumentParser(description="ZebraID Mac Production Training Runner")
     parser.add_argument("--config", type=str, default="configs/default.yaml", help="Path to config YAML")
-    parser.add_argument("--seed", type=int, default=42, help="Random seed")
+    parser.add_argument("--seeds", type=int, nargs="+", default=[42, 43, 44], help="Random seeds for statistical validation")
     parser.add_argument("--epochs", type=int, default=30, help="Number of training epochs")
     parser.add_argument("--fast", action="store_true", help="Use lightweight ResNet-50 backbone for fast Mac mini testing")
     parser.add_argument("--backbone", type=str, default=None, choices=["megadescriptor", "resnet50"], help="Backbone model choice")
@@ -184,7 +191,7 @@ def main():
     
     run_full_pipeline(
         config_path=args.config,
-        seeds=[args.seed],
+        seeds=args.seeds,
         num_epochs=args.epochs,
         fast_mode=args.fast,
         backbone_override=args.backbone,

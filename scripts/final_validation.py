@@ -73,7 +73,30 @@ def run_preflight_checks():
         fatal_error("Experiment tracking missing. Metrics will not be saved properly.")
     else:
         print("✅ Experiment Tracker is wired in.")
+    # 7. Check for Paper Tables generator
+    tables_script = Path("scripts/generate_paper_tables.py")
+    if not tables_script.exists():
+        fatal_error("scripts/generate_paper_tables.py not found. Paper tables generation missing.")
+    else:
+        print("✅ Paper tables generator found.")
         
+    # 8. Security Audit (Phase 11)
+    # Ensure no .env file is tracked by git
+    if Path(".env").exists():
+        try:
+            import subprocess
+            git_status = subprocess.check_output(["git", "ls-files", ".env"], text=True).strip()
+            if git_status == ".env":
+                fatal_error(".env file is tracked by Git. Secrets may be exposed!")
+        except Exception:
+            pass
+            
+    # Basic regex scan for obvious API keys (dummy check)
+    if "api_key=" in train_code.lower() or "sk-" in train_code:
+        print("⚠️ Warning: Possible hardcoded secret detected in train.py.")
+    else:
+        print("✅ Security audit: No obvious hardcoded secrets detected.")
+
     print("\n🚀 Pre-flight checks passed. Cleared for 30-epoch training.")
 
 if __name__ == "__main__":

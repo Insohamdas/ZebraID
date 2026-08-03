@@ -304,7 +304,11 @@ def train(
     run_name     = f"{mode}_{backbone_name}_seed{split_seed}"
     wandb_run    = _try_init_wandb(cfg, run_name)
     csv_log_path = out_dir / "training_log.csv"
-    csv_fields   = ["epoch", "train_loss", "rank1_a", "rank1_b", "map_a", "map_b", "lr_backbone", "lr_projector"]
+    csv_fields   = [
+        "epoch", "train_loss", "rank1_a", "rank1_b", "map_a", "map_b", 
+        "lr_backbone", "lr_projector", 
+        "throughput_img_sec", "dataloader_wait_pct", "peak_memory_mb"
+    ]
 
     with open(csv_log_path, "w", newline="") as f:
         csv.DictWriter(f, fieldnames=csv_fields).writeheader()
@@ -360,11 +364,28 @@ def train(
         model.train()
         total_loss = 0.0
         t0 = time.time()
+        
+        # Profiling accumulators
+        data_wait_time = 0.0
+        compute_time = 0.0
+        num_images_processed = 0
+        
         optimizer.zero_grad()
+        
+        # Reset memory tracking if CUDA
+        if device.type == "cuda":
+            torch.cuda.reset_peak_memory_stats()
+            
+        t_data_start = time.time()
 
         for step, (images, individual_ids, _) in enumerate(train_loader):
+            data_wait_time += time.time() - t_data_start
+            t_comp_start = time.time()
+            
             images         = images.to(device, non_blocking=True)
             individual_ids = individual_ids.to(device, non_blocking=True)
+            batch_size     = images.size(0)
+            num_images_processed += batch_size
 
             with torch.amp.autocast(amp_device_type, enabled=use_amp):
                 embeddings = model(images)
@@ -375,6 +396,8 @@ def train(
                 scaler.scale(loss).backward()
             else:
                 loss.backward()
+                
+            compute_time += time.time() - t_comp_start
 
             total_loss += loss.item() * accum_steps
 
@@ -392,6 +415,7 @@ def train(
                     f"Loss: {loss.item() * accum_steps:.4f}",
                     flush=True,
                 )
+            t_data_start = time.time()
 
         scheduler.step()
         avg_loss = total_loss / len(train_loader)
@@ -414,6 +438,17 @@ def train(
         def _safe_round(v: float) -> float:
             return round(v, 4) if v == v else float("nan")  # nan check
 
+        # ── Profiling Metrics ────────────────────────────────────────────────
+        throughput = num_images_processed / elapsed if elapsed > 0 else 0
+        total_train_time = data_wait_time + compute_time
+        dl_wait_pct = (data_wait_time / total_train_time * 100.0) if total_train_time > 0 else 0.0
+        
+        peak_mem_mb = 0.0
+        if device.type == "cuda":
+            peak_mem_mb = torch.cuda.max_memory_allocated() / (1024 * 1024)
+        elif device.type == "mps":
+            peak_mem_mb = torch.mps.current_allocated_memory() / (1024 * 1024)
+
         row = {
             "epoch":      epoch,
             "train_loss": round(avg_loss, 4),
@@ -423,6 +458,9 @@ def train(
             "map_b":      _safe_round(metrics_b["map"]),
             "lr_backbone": lr_bb,
             "lr_projector": lr_proj,
+            "throughput_img_sec": round(throughput, 1),
+            "dataloader_wait_pct": round(dl_wait_pct, 1),
+            "peak_memory_mb": round(peak_mem_mb, 1),
         }
 
         print(
@@ -430,7 +468,7 @@ def train(
             f"R1_A={metrics_a['rank1']:.3f} R1_B={metrics_b['rank1']:.3f} "
             f"mAP_A={metrics_a['map']:.3f} mAP_B={metrics_b['map']:.3f} "
             f"| LR(bb)={lr_bb:.2e} LR(proj)={lr_proj:.2e} "
-            f"({elapsed:.1f}s)"
+            f"({elapsed:.1f}s | {throughput:.1f} im/s | Mem: {peak_mem_mb:.0f} MB | DL Wait: {dl_wait_pct:.1f}%)"
         )
 
         with open(csv_log_path, "a", newline="") as f:
