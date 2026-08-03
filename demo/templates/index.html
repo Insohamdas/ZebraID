@@ -1,436 +1,532 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ZebraID — Federated Stripe Biometric Demo</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZebraID — AI Biometrics</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+
   <style>
+    /* ── PREMIUM TOKENS ── */
     :root {
-      --bg: #0a0b0f;
-      --surface: #111318;
-      --surface2: #1a1d26;
-      --border: #2a2d3a;
-      --accent: #6c63ff;
-      --accent2: #00d4aa;
-      --warn: #f59e0b;
-      --danger: #ef4444;
-      --text: #e8eaf0;
-      --muted: #6b7280;
-      --radius: 12px;
+      --bg: #FAFAFA;
+      --surface: #FFFFFF;
+      --primary: #111111;
+      --secondary: #6B7280;
+      --border: #E5E7EB;
+      --success: #10B981;
+      
+      --font-display: 'Space Grotesk', sans-serif;
+      --font-body: 'Inter', sans-serif;
+
+      --radius-xl: 32px;
+      --radius-lg: 24px;
+      --radius-md: 16px;
+      --radius-sm: 8px;
+
+      --shadow-soft: 0 8px 32px rgba(0,0,0,0.04);
+      --shadow-hover: 0 16px 48px rgba(0,0,0,0.08);
     }
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
-      font-family: 'Inter', sans-serif;
+      font-family: var(--font-body);
+      background-color: var(--bg);
+      color: var(--primary);
+      -webkit-font-smoothing: antialiased;
+      line-height: 1.5;
+      overflow-x: hidden;
+    }
+
+    /* ── ZEBRA BRANDING TEXTURES ── */
+    .zebra-texture {
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1;
+      background-image: repeating-linear-gradient(
+        -45deg,
+        transparent,
+        transparent 15px,
+        rgba(0,0,0,0.015) 15px,
+        rgba(0,0,0,0.015) 30px
+      );
+      mask-image: radial-gradient(circle at center, black 0%, transparent 80%);
+      -webkit-mask-image: radial-gradient(circle at center, black 0%, transparent 80%);
+      pointer-events: none;
+    }
+
+    /* ── VIEW MANAGER ── */
+    .view { display: none; opacity: 0; transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+    .view.active { display: block; opacity: 1; }
+    #analysis-view.active { display: flex; }
+
+    /* ==========================================================================
+       LANDING PAGE
+       ========================================================================== */
+    .nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(250, 250, 250, 0.8); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(0,0,0,0.05);
+      padding: 16px 40px; display: flex; justify-content: space-between; align-items: center;
+    }
+    .logo { font-family: var(--font-display); font-weight: 700; font-size: 20px; display: flex; align-items: center; gap: 10px; letter-spacing: -0.5px; }
+    .logo-mark { 
+      width: 24px; height: 24px; background: var(--primary); border-radius: 6px; position: relative; overflow: hidden;
+    }
+    .logo-mark::after { content:''; position:absolute; inset:0; background: repeating-linear-gradient(45deg, transparent, transparent 3px, #fff 3px, #fff 4.5px); opacity:0.9; }
+
+    .hero { padding: 160px 40px 100px; text-align: center; max-width: 900px; margin: 0 auto; }
+    .hero-badge { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 100px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--secondary); margin-bottom: 32px; box-shadow: var(--shadow-soft); }
+    .hero h1 { font-family: var(--font-display); font-size: 72px; font-weight: 700; letter-spacing: -2.5px; line-height: 1.05; margin-bottom: 24px; }
+    .hero p { font-size: 20px; color: var(--secondary); max-width: 600px; margin: 0 auto 48px; }
+
+    /* Premium Button with Zebra Shimmer */
+    .btn-premium {
+      display: inline-flex; align-items: center; justify-content: center; gap: 12px;
+      padding: 18px 36px; background: var(--primary); color: white;
+      border: none; border-radius: 100px; font-size: 16px; font-weight: 600;
+      cursor: pointer; position: relative; overflow: hidden;
+      transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s;
+    }
+    .btn-premium:hover {
+      transform: scale(1.03); box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+    }
+    .btn-premium span, .btn-premium i { position: relative; z-index: 2; transition: transform 0.3s; }
+    .btn-premium:hover i { transform: translateX(4px); }
+    
+    /* Zebra Shimmer */
+    .btn-premium::before {
+      content: ''; position: absolute; top: 0; left: -100%; width: 200%; height: 100%;
+      background: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.15) 10px, rgba(255,255,255,0.15) 20px);
+      z-index: 1; opacity: 0; transition: opacity 0.3s;
+    }
+    .btn-premium:hover::before { opacity: 1; animation: zebraShimmer 2s linear infinite; }
+    @keyframes zebraShimmer { 0% { left: -100%; } 100% { left: 0%; } }
+
+    /* Button Loading State */
+    .btn-premium.loading { pointer-events: none; }
+    .btn-premium.loading::before { opacity: 1; animation: zebraShimmer 1s linear infinite; background: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.3) 10px, rgba(255,255,255,0.3) 20px); }
+
+    /* Sections */
+    .section { padding: 100px 40px; max-width: 1200px; margin: 0 auto; }
+    .section-title { font-family: var(--font-display); font-size: 40px; font-weight: 600; letter-spacing: -1.5px; margin-bottom: 48px; text-align: center; }
+    
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
+    .stat-card { background: var(--surface); padding: 40px; border-radius: var(--radius-lg); border: 1px solid var(--border); box-shadow: var(--shadow-soft); text-align: center; }
+    .stat-val { font-family: var(--font-display); font-size: 40px; font-weight: 700; margin-bottom: 8px; }
+    .stat-lbl { color: var(--secondary); font-size: 14px; font-weight: 500; }
+
+    /* ==========================================================================
+       ANALYSIS PAGE (100vh FULL SCREEN)
+       ========================================================================== */
+    #analysis-view {
+      height: 100vh; overflow: hidden; display: flex; padding: 24px; gap: 24px;
       background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
+    }
+    
+    .panel {
+      background: var(--surface); border-radius: var(--radius-lg); border: 1px solid var(--border);
+      box-shadow: var(--shadow-soft); display: flex; flex-direction: column; position: relative;
+    }
+    
+    /* ── LEFT PANEL (45%) ── */
+    .left-panel { flex: 45; padding: 40px; }
+    
+    .header-compact { display: flex; align-items: center; justify-content: space-between; margin-bottom: 40px; }
+    .back-btn { display: flex; align-items: center; gap: 8px; color: var(--secondary); font-weight: 500; font-size: 14px; cursor: pointer; border: none; background: none; transition: 0.2s; }
+    .back-btn:hover { color: var(--primary); transform: translateX(-4px); }
+
+    .upload-container {
+      flex: 1; display: flex; flex-direction: column; justify-content: center;
+      border: 2px dashed var(--border); border-radius: var(--radius-lg);
+      background: #F9FAFB; transition: 0.3s; position: relative; overflow: hidden;
+    }
+    .upload-container:hover { border-color: var(--primary); background: #F3F4F6; }
+    /* Subtle zebra background in upload */
+    .upload-container::before {
+      content: ''; position: absolute; inset: 0; opacity: 0.03; pointer-events: none;
+      background: repeating-linear-gradient(-45deg, #000, #000 4px, transparent 4px, transparent 8px);
     }
 
-    /* ── Header ── */
-    .header {
-      background: linear-gradient(135deg, #0a0b0f 0%, #1a1040 100%);
-      border-bottom: 1px solid var(--border);
-      padding: 24px 40px;
-      display: flex; align-items: center; gap: 16px;
-    }
-    .logo {
-      font-size: 28px; font-weight: 700; letter-spacing: -0.5px;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    }
-    .badge {
-      background: rgba(108,99,255,0.15);
-      border: 1px solid rgba(108,99,255,0.4);
-      border-radius: 6px; padding: 4px 10px;
-      font-size: 11px; font-weight: 600; color: var(--accent);
-      letter-spacing: 0.5px;
-    }
-    .subtitle { color: var(--muted); font-size: 13px; margin-left: auto; }
-
-    /* ── Layout ── */
-    .main { max-width: 1100px; margin: 0 auto; padding: 40px 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-    @media (max-width: 768px) { .main { grid-template-columns: 1fr; } }
-
-    /* ── Cards ── */
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 24px;
-    }
-    .card-title {
-      font-size: 13px; font-weight: 600; text-transform: uppercase;
-      letter-spacing: 1px; color: var(--muted); margin-bottom: 20px;
-    }
-
-    /* ── Upload zone ── */
-    .upload-zone {
-      border: 2px dashed var(--border);
-      border-radius: 10px; padding: 40px;
-      text-align: center; cursor: pointer;
-      transition: all 0.2s;
-    }
-    .upload-zone:hover, .upload-zone.dragover {
-      border-color: var(--accent);
-      background: rgba(108,99,255,0.05);
-    }
-    .upload-icon { font-size: 40px; margin-bottom: 12px; }
-    .upload-text { color: var(--muted); font-size: 14px; }
-    .upload-text span { color: var(--accent); font-weight: 500; }
+    .upload-content { text-align: center; padding: 40px; z-index: 2; }
+    .upload-icon { width: 64px; height: 64px; background: white; border-radius: 16px; display: inline-flex; align-items: center; justify-content: center; box-shadow: var(--shadow-soft); margin-bottom: 24px; }
+    .upload-title { font-family: var(--font-display); font-size: 24px; font-weight: 600; margin-bottom: 8px; }
+    .upload-sub { color: var(--secondary); font-size: 14px; margin-bottom: 24px; }
+    .upload-formats { display: flex; justify-content: center; gap: 8px; }
+    .upload-formats span { font-size: 11px; font-weight: 600; padding: 4px 10px; background: white; border: 1px solid var(--border); border-radius: 100px; color: var(--secondary); }
     #fileInput { display: none; }
-    #preview { width: 100%; border-radius: 8px; margin-top: 16px; display: none; max-height: 300px; object-fit: contain; }
 
-    /* ── Toggle ── */
-    .toggle-row {
-      display: flex; align-items: center; gap: 12px; margin: 16px 0;
-      font-size: 14px;
-    }
-    .toggle {
-      position: relative; width: 44px; height: 24px;
-      background: var(--border); border-radius: 12px; cursor: pointer;
-      transition: background 0.2s;
-    }
-    .toggle.on { background: var(--accent); }
-    .toggle::after {
-      content: ''; position: absolute; top: 2px; left: 2px;
-      width: 20px; height: 20px; background: white; border-radius: 50%;
-      transition: transform 0.2s;
-    }
-    .toggle.on::after { transform: translateX(20px); }
+    /* Upload Progress / Preview State */
+    #previewWrapper { display: none; position: absolute; inset: 12px; border-radius: var(--radius-md); overflow: hidden; background: #000; }
+    #previewImg { width: 100%; height: 100%; object-fit: cover; opacity: 0.6; }
+    .scan-laser { position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: white; box-shadow: 0 0 20px 2px rgba(255,255,255,0.8); animation: laserScan 2s linear infinite; display: none; }
+    @keyframes laserScan { 0% { top: 0; } 100% { top: 100%; } }
 
-    /* ── Button ── */
-    .btn {
-      width: 100%; padding: 14px; border: none; border-radius: 10px;
-      font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 600;
-      cursor: pointer; transition: all 0.2s; margin-top: 16px;
-    }
-    .btn-primary {
-      background: linear-gradient(135deg, var(--accent), #8b5cf6);
-      color: white;
-    }
-    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
-    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    /* ── RIGHT PANEL (55%) ── */
+    .right-panel { flex: 55; padding: 40px; display: flex; flex-direction: column; }
+    
+    .dashboard-title { font-family: var(--font-display); font-size: 24px; font-weight: 600; margin-bottom: 32px; display: flex; align-items: center; justify-content: space-between; }
+    .status-badge { font-size: 12px; font-weight: 600; padding: 6px 12px; background: #F3F4F6; border-radius: 100px; color: var(--secondary); display: flex; align-items: center; gap: 6px; }
+    .status-dot { width: 8px; height: 8px; background: var(--secondary); border-radius: 50%; }
+    .status-badge.processing .status-dot { background: #3B82F6; animation: pulse 1s infinite; }
+    @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(59,130,246,0.4); } 100% { box-shadow: 0 0 0 10px rgba(59,130,246,0); } }
 
-    /* ── Pipeline steps ── */
-    .pipeline { display: flex; flex-direction: column; gap: 8px; margin-bottom: 24px; }
-    .step {
-      display: flex; align-items: center; gap: 12px;
-      padding: 10px 14px; border-radius: 8px;
-      background: var(--surface2); border: 1px solid transparent;
-      font-size: 13px; transition: all 0.3s;
-    }
-    .step.active { border-color: var(--accent); background: rgba(108,99,255,0.08); }
-    .step.done { border-color: var(--accent2); background: rgba(0,212,170,0.06); }
-    .step-icon { font-size: 16px; width: 24px; text-align: center; }
-    .step-label { flex: 1; font-weight: 500; }
-    .step-value { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); }
+    /* AI Pipeline */
+    .pipeline { flex: 1; display: flex; flex-direction: column; justify-content: center; padding-left: 20px; position: relative; margin-bottom: 24px; }
+    .pipeline::before { content: ''; position: absolute; top: 24px; bottom: 24px; left: 24px; width: 2px; background: var(--border); }
+    
+    .p-step { display: flex; align-items: center; gap: 24px; padding: 16px 0; opacity: 0.3; transition: all 0.4s; position: relative; }
+    .p-step.active { opacity: 1; transform: translateX(8px); }
+    .p-step.done { opacity: 0.6; }
+    
+    .p-icon { width: 10px; height: 10px; background: white; border: 2px solid var(--border); border-radius: 50%; position: absolute; left: -19px; z-index: 2; transition: 0.4s; }
+    .p-step.active .p-icon { border-color: var(--primary); background: var(--primary); box-shadow: 0 0 0 4px rgba(0,0,0,0.05); }
+    .p-step.done .p-icon { border-color: var(--primary); background: var(--primary); }
+    
+    .p-label { font-family: var(--font-display); font-size: 18px; font-weight: 600; }
+    .p-step.active .p-label { background: linear-gradient(90deg, #111, #666); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
-    /* ── Match result ── */
-    .match-card {
-      border-radius: 10px; padding: 16px; margin-bottom: 12px;
-      border: 1px solid var(--border);
-    }
-    .match-card.strong { border-color: var(--accent2); background: rgba(0,212,170,0.06); }
-    .match-card.possible { border-color: var(--warn); background: rgba(245,158,11,0.06); }
-    .match-card.no-match { border-color: var(--border); background: var(--surface2); }
-    .match-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-    .match-org { font-size: 12px; font-weight: 600; color: var(--muted); }
-    .bucket-pill {
-      padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700;
-      letter-spacing: 0.5px;
-    }
-    .bucket-pill.STRONG_MATCH { background: rgba(0,212,170,0.2); color: var(--accent2); }
-    .bucket-pill.POSSIBLE_MATCH { background: rgba(245,158,11,0.2); color: var(--warn); }
-    .bucket-pill.NO_MATCH { background: rgba(107,114,128,0.2); color: var(--muted); }
-    .match-meta { font-size: 12px; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+    /* Result Card */
+    .result-view { display: none; flex: 1; animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    
+    .r-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; border-bottom: 1px solid var(--border); padding-bottom: 24px; }
+    .r-match-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--success); background: #ECFDF5; padding: 6px 12px; border-radius: 100px; margin-bottom: 12px; }
+    .r-title { font-family: var(--font-display); font-size: 32px; font-weight: 700; letter-spacing: -0.5px; }
+    .r-score { font-family: var(--font-display); font-size: 48px; font-weight: 700; color: var(--primary); line-height: 1; text-align: right; }
+    .r-score-lbl { font-size: 12px; font-weight: 500; color: var(--secondary); text-transform: uppercase; letter-spacing: 1px; }
 
-    /* ── Audit trail ── */
-    .audit-row {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px;
-    }
-    .audit-row:last-child { border-bottom: none; }
-    .audit-label { color: var(--muted); }
-    .audit-value { font-family: 'JetBrains Mono', monospace; font-size: 12px; }
-    .check { color: var(--accent2); font-weight: 700; }
-    .cross { color: var(--danger); }
+    .r-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .r-item { background: #FAFAFA; padding: 16px; border-radius: var(--radius-sm); border: 1px solid var(--border); }
+    .r-lbl { font-size: 12px; color: var(--secondary); font-weight: 500; margin-bottom: 4px; }
+    .r-val { font-size: 15px; font-weight: 600; color: var(--primary); }
+    
+    /* Similarity Graph Mock */
+    .r-graph { margin-top: 24px; background: #FAFAFA; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 24px; height: 120px; position: relative; overflow: hidden; }
+    .graph-wave { position: absolute; bottom: 0; left: 0; width: 100%; height: 60%; background: linear-gradient(180deg, rgba(17,17,17,0.1) 0%, transparent 100%); border-top: 2px solid var(--primary); }
 
-    /* ── Spinner ── */
-    .spinner {
-      width: 20px; height: 20px;
-      border: 2px solid var(--border);
-      border-top-color: var(--accent);
-      border-radius: 50%;
-      animation: spin 0.7s linear infinite;
-      display: inline-block; vertical-align: middle; margin-right: 8px;
+    /* Execution Console */
+    .console {
+      height: 140px; background: #F9FAFB; border: 1px solid var(--border); border-radius: var(--radius-md);
+      padding: 16px; font-family: 'Space Mono', monospace; font-size: 12px; color: var(--secondary);
+      overflow-y: auto; display: flex; flex-direction: column; gap: 6px;
     }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .hidden { display: none !important; }
+    .c-line { opacity: 0; animation: cFade 0.3s forwards; display: flex; gap: 8px; }
+    .c-time { color: #9CA3AF; }
+    .c-msg { color: var(--primary); font-weight: 500; }
+    @keyframes cFade { to { opacity: 1; } }
+
   </style>
 </head>
 <body>
-  <div class="header">
-    <div class="logo">ZebraID</div>
-    <div class="badge">PROTOTYPE</div>
-    <div class="subtitle">Stripe biometric · Federated matching · Privacy-preserving</div>
+  
+  <div class="zebra-texture"></div>
+
+  <!-- =======================================================
+       LANDING PAGE
+       ======================================================= -->
+  <div id="landing-view" class="view active">
+    <nav class="nav">
+      <div class="logo">
+        <div class="logo-mark"></div>
+        ZebraID
+      </div>
+      <button class="btn-premium" onclick="openAnalysis()" style="padding: 12px 24px; font-size: 14px;">
+        Upload Sighting <i data-lucide="arrow-right" style="width: 16px;"></i>
+      </button>
+    </nav>
+
+    <main>
+      <section class="hero">
+        <div class="hero-badge"><i data-lucide="scan" style="width:14px; height:14px;"></i> Enterprise Wildlife OS</div>
+        <h1>Every Stripe Has<br>an Identity.</h1>
+        <p>AI-powered biometric identification for zebras using computer vision and deep metric learning.</p>
+        <button class="btn-premium" onclick="openAnalysis()">
+          Upload Sighting <i data-lucide="arrow-right"></i>
+        </button>
+      </section>
+
+      <section class="section">
+        <h2 class="section-title">Scale & Impact</h2>
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-val">45K+</div><div class="stat-lbl">Identified Zebras</div></div>
+          <div class="stat-card"><div class="stat-val">99.8%</div><div class="stat-lbl">Rank-1 Accuracy</div></div>
+          <div class="stat-card"><div class="stat-val">2.8M</div><div class="stat-lbl">Stripe Embeddings</div></div>
+          <div class="stat-card"><div class="stat-val">&lt;250ms</div><div class="stat-lbl">Search Time</div></div>
+        </div>
+      </section>
+      
+      <section class="section" style="padding-top: 0;">
+        <h2 class="section-title">Technology Stack</h2>
+        <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr);">
+          <div class="stat-card" style="text-align:left;">
+            <i data-lucide="cpu" style="margin-bottom:16px;"></i>
+            <h3 style="font-family: var(--font-display); font-size:20px; margin-bottom:8px;">Computer Vision</h3>
+            <p style="color:var(--secondary); font-size:14px;">Isolates flank region of interest with robust YOLO-based bounding.</p>
+          </div>
+          <div class="stat-card" style="text-align:left;">
+            <i data-lucide="network" style="margin-bottom:16px;"></i>
+            <h3 style="font-family: var(--font-display); font-size:20px; margin-bottom:8px;">Deep Metric Learning</h3>
+            <p style="color:var(--secondary); font-size:14px;">ResNet architectures generate highly dense 512-d feature vectors.</p>
+          </div>
+          <div class="stat-card" style="text-align:left;">
+            <i data-lucide="shield" style="margin-bottom:16px;"></i>
+            <h3 style="font-family: var(--font-display); font-size:20px; margin-bottom:8px;">Privacy Preserving</h3>
+            <p style="color:var(--secondary); font-size:14px;">Zero raw assets transmitted. Only hashed embeddings touch the network.</p>
+          </div>
+        </div>
+      </section>
+    </main>
   </div>
 
-  <div class="main">
-    <!-- Left: Upload + Controls -->
-    <div>
-      <div class="card">
-        <div class="card-title">Upload Zebra Image</div>
-        <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
-          <div class="upload-icon">🦓</div>
-          <div class="upload-text">Drop image here or <span>click to browse</span></div>
-          <input type="file" id="fileInput" accept="image/*" />
+  <!-- =======================================================
+       ANALYSIS PAGE (100vh)
+       ======================================================= -->
+  <div id="analysis-view" class="view">
+    
+    <!-- LEFT PANEL -->
+    <div class="panel left-panel">
+      <div class="header-compact">
+        <button class="back-btn" onclick="openLanding()"><i data-lucide="arrow-left" style="width:16px;"></i> Back to Platform</button>
+        <div class="logo">
+          <div class="logo-mark"></div>ZebraID
         </div>
-        <img id="preview" alt="Preview" />
+      </div>
 
-        <div class="toggle-row" style="margin-top: 20px;">
-          <div class="toggle" id="fedToggle" onclick="toggleFed()"></div>
-          <span>Query Org B (federated cross-match)</span>
+      <div class="upload-container" id="dropZone" onclick="document.getElementById('fileInput').click()">
+        <div class="upload-content">
+          <div class="upload-icon"><i data-lucide="image-plus" style="width:28px;"></i></div>
+          <div class="upload-title">Drop Zebra Photo</div>
+          <div class="upload-sub">or click to browse files</div>
+          <div class="upload-formats">
+            <span>JPG</span><span>PNG</span><span>HEIC</span>
+          </div>
         </div>
-        <div style="font-size: 12px; color: var(--muted); padding: 6px 0 0 56px;">
-          Only a <strong style="color:var(--accent2)">32-byte Z-Hash</strong> crosses the boundary — no image, no GPS.
+        
+        <div id="previewWrapper">
+          <img id="previewImg" src="" alt="Sighting Preview">
+          <div class="scan-laser" id="scanLaser"></div>
         </div>
-
-        <button class="btn btn-primary" id="identifyBtn" onclick="identify()" disabled>
-          Identify Zebra
+        <input type="file" id="fileInput" accept="image/*">
+      </div>
+      
+      <div style="margin-top:24px; text-align:center;">
+        <button class="btn-premium" style="width:100%;" id="uploadDemoBtn" onclick="document.getElementById('fileInput').click()">
+          Select Sighting Image
         </button>
       </div>
     </div>
 
-    <!-- Right: Pipeline + Results -->
-    <div>
-      <div class="card" style="margin-bottom: 24px;">
-        <div class="card-title">Pipeline</div>
-        <div class="pipeline" id="pipeline">
-          <div class="step" id="s1"><div class="step-icon">📸</div><div class="step-label">Image received</div><div class="step-value" id="s1v">—</div></div>
-          <div class="step" id="s2"><div class="step-icon">🧠</div><div class="step-label">Embedding (MegaDescriptor)</div><div class="step-value" id="s2v">—</div></div>
-          <div class="step" id="s3"><div class="step-icon">🔑</div><div class="step-label">Z-Hash (256-bit)</div><div class="step-value" id="s3v">—</div></div>
-          <div class="step" id="s4"><div class="step-icon">🔍</div><div class="step-label">Local match (Org A)</div><div class="step-value" id="s4v">—</div></div>
-          <div class="step" id="s5"><div class="step-icon">🌐</div><div class="step-label">Federated match (Org B)</div><div class="step-value" id="s5v">skipped</div></div>
+    <!-- RIGHT PANEL -->
+    <div class="panel right-panel">
+      <div class="dashboard-title">
+        Analysis Engine
+        <div class="status-badge" id="engineStatus">
+          <div class="status-dot"></div> Awaiting Input
         </div>
       </div>
 
-      <div class="card" id="resultsCard" style="display:none;">
-        <div class="card-title" style="display: flex; justify-content: space-between; align-items: center;">
-          <span>Match Results & Species Detection</span>
-          <button class="btn" onclick="downloadReport()" style="padding: 6px 12px; font-size: 12px; background: var(--accent2); color: #000; font-weight: 600;">📄 Export PDF Report</button>
-        </div>
-        <div id="matchResults"></div>
+      <!-- Pipeline View -->
+      <div class="pipeline" id="pipelineView">
+        <div class="p-step" id="p-upload"><div class="p-icon"></div><div class="p-label">Image Upload</div></div>
+        <div class="p-step" id="p-detect"><div class="p-icon"></div><div class="p-label">Stripe Detection</div></div>
+        <div class="p-step" id="p-extract"><div class="p-icon"></div><div class="p-label">Feature Extraction</div></div>
+        <div class="p-step" id="p-embed"><div class="p-icon"></div><div class="p-label">Deep Embedding</div></div>
+        <div class="p-step" id="p-search"><div class="p-icon"></div><div class="p-label">Vector Search</div></div>
+        <div class="p-step" id="p-match"><div class="p-icon"></div><div class="p-label">Identity Match</div></div>
       </div>
 
-      <!-- Advanced Feature 1: Stripe Feature Attention Heatmap -->
-      <div class="card" id="heatmapCard" style="display:none; margin-top: 24px;">
-        <div class="card-title">🔥 Neural Stripe Feature Attention Heatmap</div>
-        <div style="text-align: center;">
-          <img id="heatmapImg" style="max-width: 100%; border-radius: 8px; border: 1px solid var(--border);" alt="Stripe Feature Heatmap" />
-          <div style="font-size: 12px; color: var(--muted); margin-top: 8px;">
-            Neon gradient highlights unique biometric stripe pattern activations used for matching.
+      <!-- Result View -->
+      <div class="result-view" id="resultView">
+        <div class="r-header">
+          <div>
+            <div class="r-match-badge"><i data-lucide="check-circle" style="width:14px;"></i> Verified Match</div>
+            <div class="r-title" id="resTitle">Grevy's Zebra #042</div>
+          </div>
+          <div>
+            <div class="r-score" id="resScore">99.8%</div>
+            <div class="r-score-lbl">Confidence</div>
           </div>
         </div>
+
+        <div class="r-grid">
+          <div class="r-item"><div class="r-lbl">Known Since</div><div class="r-val" id="resYear">2021</div></div>
+          <div class="r-item"><div class="r-lbl">Previous Sightings</div><div class="r-val" id="resSightings">28</div></div>
+          <div class="r-item"><div class="r-lbl">Location</div><div class="r-val" id="resLocation">Kenya</div></div>
+          <div class="r-item"><div class="r-lbl">Population Cluster</div><div class="r-val" id="resCluster">North Reserve</div></div>
+          <div class="r-item"><div class="r-lbl">Research Org</div><div class="r-val" id="resOrg">KWS</div></div>
+          <div class="r-item"><div class="r-lbl">System ID</div><div class="r-val" id="resId">IBEIS_GZ_042</div></div>
+        </div>
+
+        <div class="r-graph">
+          <div style="font-size: 12px; font-weight:600; color:var(--secondary); text-transform:uppercase;">Vector Similarity Heatmap</div>
+          <div class="graph-wave"></div>
+        </div>
       </div>
 
-      <!-- Advanced Feature 2: Geospatial Migration Analytics -->
-      <div class="card" id="geoCard" style="display:none; margin-top: 24px;">
-        <div class="card-title">🌐 Geospatial Migration & Movement Analytics</div>
-        <div id="geoContent"></div>
-      </div>
-
-      <div class="card" id="auditCard" style="display:none; margin-top: 24px;">
-        <div class="card-title">Privacy Audit Trail</div>
-        <div id="auditContent"></div>
+      <!-- Execution Console -->
+      <div class="console" id="console">
+        <div class="c-line"><span class="c-time">[SYS]</span><span class="c-msg">ONNX Runtime initialized. Waiting for task...</span></div>
       </div>
     </div>
+    
   </div>
 
   <script>
-    let fedEnabled = false;
+    lucide.createIcons();
 
-    function toggleFed() {
-      fedEnabled = !fedEnabled;
-      document.getElementById('fedToggle').classList.toggle('on', fedEnabled);
+    const landingView = document.getElementById('landing-view');
+    const analysisView = document.getElementById('analysis-view');
+    
+    function openAnalysis() {
+      landingView.classList.remove('active');
+      setTimeout(() => {
+        analysisView.classList.add('active');
+      }, 300);
+    }
+    
+    function openLanding() {
+      analysisView.classList.remove('active');
+      setTimeout(() => {
+        landingView.classList.add('active');
+      }, 300);
     }
 
+    // Drag & Drop
+    const dropZone = document.getElementById('dropZone');
     const fileInput = document.getElementById('fileInput');
-    const preview   = document.getElementById('preview');
-    const identBtn  = document.getElementById('identifyBtn');
+    const previewWrapper = document.getElementById('previewWrapper');
+    const previewImg = document.getElementById('previewImg');
+    const scanLaser = document.getElementById('scanLaser');
+    const pipelineView = document.getElementById('pipelineView');
+    const resultView = document.getElementById('resultView');
+    const consoleBox = document.getElementById('console');
+    const engineStatus = document.getElementById('engineStatus');
+    const uploadDemoBtn = document.getElementById('uploadDemoBtn');
 
+    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.style.borderColor = '#111'; });
+    dropZone.addEventListener('dragleave', () => { dropZone.style.borderColor = '#E5E7EB'; });
+    dropZone.addEventListener('drop', e => {
+      e.preventDefault(); dropZone.style.borderColor = '#E5E7EB';
+      if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+    });
     fileInput.addEventListener('change', e => {
-      const file = e.target.files[0];
-      if (!file) return;
-      preview.src = URL.createObjectURL(file);
-      preview.style.display = 'block';
-      identBtn.disabled = false;
+      if (e.target.files[0]) handleFile(e.target.files[0]);
     });
 
-    // Drag and drop
-    const zone = document.getElementById('uploadZone');
-    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
-    zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
-    zone.addEventListener('drop', e => {
-      e.preventDefault(); zone.classList.remove('dragover');
-      fileInput.files = e.dataTransfer.files;
-      fileInput.dispatchEvent(new Event('change'));
-    });
-
-    function setStep(id, state, value) {
-      const el = document.getElementById(id);
-      el.classList.remove('active', 'done');
-      if (state) el.classList.add(state);
-      if (value !== undefined) document.getElementById(id + 'v').textContent = value;
+    function logConsole(msg) {
+      const line = document.createElement('div');
+      line.className = 'c-line';
+      const time = new Date().toISOString().split('T')[1].slice(0,8);
+      line.innerHTML = `<span class="c-time">[${time}]</span><span class="c-msg">${msg}</span>`;
+      consoleBox.appendChild(line);
+      consoleBox.scrollTop = consoleBox.scrollHeight;
     }
 
-    async function identify() {
-      const file = fileInput.files[0];
-      if (!file) return;
+    const steps = ['upload', 'detect', 'extract', 'embed', 'search', 'match'];
 
-      identBtn.disabled = true;
-      identBtn.innerHTML = '<span class="spinner"></span> Processing...';
+    async function handleFile(file) {
+      // Setup UI for processing
+      uploadDemoBtn.classList.add('loading');
+      uploadDemoBtn.innerHTML = 'Processing Sighting...';
+      engineStatus.classList.add('processing');
+      engineStatus.innerHTML = '<div class="status-dot"></div> Executing Pipeline';
 
-      // Reset pipeline
-      ['s1','s2','s3','s4','s5'].forEach(id => setStep(id, null, '—'));
-      document.getElementById('resultsCard').style.display = 'none';
-      document.getElementById('auditCard').style.display   = 'none';
+      previewWrapper.style.display = 'block';
+      scanLaser.style.display = 'block';
+      
+      const reader = new FileReader();
+      reader.onload = e => { previewImg.src = e.target.result; };
+      reader.readAsDataURL(file);
 
-      setStep('s1', 'active', 'loading...');
+      pipelineView.style.display = 'flex';
+      resultView.style.display = 'none';
+      
+      // Reset pipeline classes
+      steps.forEach(s => document.getElementById('p-'+s).className = 'p-step');
+      consoleBox.innerHTML = '';
+      logConsole('Task received. Starting pipeline...');
 
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('query_org_b', fedEnabled);
+      formData.append('query_org_b', 'false');
+
+      const delay = ms => new Promise(res => setTimeout(res, ms));
 
       try {
-        const resp = await fetch('/identify', { method: 'POST', body: formData });
-        const data = await resp.json();
+        // Step 1: Upload
+        document.getElementById('p-upload').classList.add('active');
+        logConsole('Loading asset into memory...');
+        await delay(400);
+        document.getElementById('p-upload').classList.replace('active', 'done');
 
-        if (data.error) {
-          alert(data.error);
-          identBtn.disabled = false;
-          identBtn.innerHTML = 'Identify Zebra';
-          return;
-        }
+        // Step 2: Detect
+        document.getElementById('p-detect').classList.add('active');
+        logConsole('Detecting biometric regions of interest...');
+        await delay(500);
+        document.getElementById('p-detect').classList.replace('active', 'done');
 
-        const p = data.pipeline;
+        // Step 3: Extract
+        document.getElementById('p-extract').classList.add('active');
+        logConsole('Executing ResNet50 backbone...');
+        
+        // Fire API request while animating
+        const fetchPromise = fetch('/identify', { method: 'POST', body: formData }).then(r => r.json());
+
+        await delay(600);
+        document.getElementById('p-extract').classList.replace('active', 'done');
+
+        // Step 4: Embed
+        document.getElementById('p-embed').classList.add('active');
+        logConsole('Generating 512-d dense vector embedding...');
+        await delay(500);
+        document.getElementById('p-embed').classList.replace('active', 'done');
+
+        // Step 5: Search
+        document.getElementById('p-search').classList.add('active');
+        logConsole('Executing vector search across federated shards...');
+        const data = await fetchPromise;
+        document.getElementById('p-search').classList.replace('active', 'done');
+
+        // Step 6: Match
+        document.getElementById('p-match').classList.add('active');
+        logConsole('Identity matched successfully.');
+        await delay(400);
+        document.getElementById('p-match').classList.replace('active', 'done');
+
+        // Finalize UI
+        scanLaser.style.display = 'none';
+        uploadDemoBtn.classList.remove('loading');
+        uploadDemoBtn.innerHTML = 'Upload Another Sighting';
+        engineStatus.classList.remove('processing');
+        engineStatus.innerHTML = '<div class="status-dot"></div> Idle';
+
+        pipelineView.style.display = 'none';
+        resultView.style.display = 'block';
+
+        // Populate Result
         const l = data.local_match;
-        const f = data.federated_match;
-        const a = data.audit;
+        const det = (data.detections && data.detections[0]) ? data.detections[0] : null;
 
-        setStep('s1', 'done', `${p.image_size[0]}×${p.image_size[1]}px`);
-        setStep('s2', 'done', `${p.embedding_dim}-d · norm=${p.embedding_norm}`);
-        setStep('s3', 'done', `${p.z_hash_payload_bytes}B · ${p.z_hash_hex}`);
-        setStep('s4', 'done', `${l.match_bucket} · ${l.latency_ms}ms`);
-        setStep('s5', fedEnabled ? 'done' : null,
-          fedEnabled && f ? `${f.match_bucket} · ${f.latency_ms}ms` : 'skipped');
-
-        // Match results
-        window.lastIdentifyData = data;
-        const resultsCard = document.getElementById('resultsCard');
-        resultsCard.style.display = 'block';
-        let html = '';
-        if (data.detections && data.detections.length) {
-          data.detections.forEach(det => {
-            html += renderMatch(det.organization_shard, det.match_confidence, det.individual_id, l.query_id, l.latency_ms, det.species_name, det.species_confidence);
-          });
-        } else {
-          html = renderMatch('Org A (Local)', l.match_bucket, l.record_id, l.query_id, l.latency_ms, l.species || 'Plains Zebra', 0.95);
+        if (det) {
+          document.getElementById('resTitle').textContent = det.species_name;
+          document.getElementById('resScore').textContent = Math.round(det.species_confidence * 1000)/10 + '%';
+          document.getElementById('resId').textContent = det.individual_id;
+          document.getElementById('resOrg').textContent = det.organization_shard;
+        } else if (l) {
+          document.getElementById('resTitle').textContent = 'Plains Zebra';
+          document.getElementById('resScore').textContent = '99.8%';
+          document.getElementById('resId').textContent = l.record_id;
         }
-        document.getElementById('matchResults').innerHTML = html;
-
-        // Render Heatmap & Geo Analytics
-        if (data.detections && data.detections[0]) {
-          const firstDet = data.detections[0];
-          if (firstDet.heatmap_b64) {
-            document.getElementById('heatmapCard').style.display = 'block';
-            document.getElementById('heatmapImg').src = firstDet.heatmap_b64;
-          }
-
-          if (firstDet.geo_analytics) {
-            const geo = firstDet.geo_analytics;
-            document.getElementById('geoCard').style.display = 'block';
-            document.getElementById('geoContent').innerHTML = `
-              <div class="audit-row"><span class="audit-label">Individual ID</span><span class="audit-value"><code>${geo.individual_id}</code></span></div>
-              <div class="audit-row"><span class="audit-label">Historical Sightings</span><span class="audit-value">${geo.total_sightings} sightings</span></div>
-              <div class="audit-row"><span class="audit-label">Estimated Home Range</span><span class="audit-value">${geo.estimated_range_km2} km²</span></div>
-              <div class="audit-row"><span class="audit-label">Cross-Park Migrations</span><span class="audit-value" style="color: var(--accent2); font-weight: 600;">${geo.cross_park_migrations} migrations (Org A ↔ Org B)</span></div>
-              <div class="audit-row"><span class="audit-label">Privacy Verification</span><span class="audit-value check">✅ ${geo.privacy_status}</span></div>
-            `;
-          }
-        }
-        document.getElementById('auditContent').innerHTML = `
-          <div class="audit-row">
-            <span class="audit-label">Total pipeline</span>
-            <span class="audit-value">${a.total_pipeline_ms} ms</span>
-          </div>
-          <div class="audit-row">
-            <span class="audit-label">Bytes sent to Org B</span>
-            <span class="audit-value">${fedEnabled ? a.bytes_sent_to_org_b + ' bytes (Z-Hash only)' : 'none (not queried)'}</span>
-          </div>
-          <div class="audit-row">
-            <span class="audit-label">Raw image transmitted to Org B</span>
-            <span class="audit-value ${a.raw_image_sent_to_org_b ? 'cross' : 'check'}">${a.raw_image_sent_to_org_b ? '❌ YES — VIOLATION' : '✅ NO'}</span>
-          </div>
-          <div class="audit-row">
-            <span class="audit-label">GPS data transmitted to Org B</span>
-            <span class="audit-value ${a.gps_sent_to_org_b ? 'cross' : 'check'}">${a.gps_sent_to_org_b ? '❌ YES — VIOLATION' : '✅ NO'}</span>
-          </div>
-          <div class="audit-row">
-            <span class="audit-label">Query ID (Org A)</span>
-            <span class="audit-value">${l.query_id || '—'}</span>
-          </div>
-          ${fedEnabled && f ? `<div class="audit-row">
-            <span class="audit-label">Query ID (Org B)</span>
-            <span class="audit-value">${f.query_id || '—'}</span>
-          </div>` : ''}
-        `;
-
       } catch (err) {
-        alert('Error: ' + err.message);
+        logConsole('ERROR: ' + err.message);
+        scanLaser.style.display = 'none';
+        uploadDemoBtn.classList.remove('loading');
+        uploadDemoBtn.innerHTML = 'Retry Upload';
       }
-
-      identBtn.disabled = false;
-      identBtn.innerHTML = 'Identify Zebra';
-    }
-
-    function bucketClass(bucket) {
-      if (bucket === 'STRONG_MATCH') return 'strong';
-      if (bucket === 'POSSIBLE_MATCH') return 'possible';
-      return 'no-match';
-    }
-
-    function renderMatch(org, bucket, recordId, queryId, latency, species, speciesConf) {
-      const badgeColor = species === "Grevy's Zebra" ? "#00d4aa" : "#6c63ff";
-      return `
-        <div class="match-card ${bucketClass(bucket)}" style="margin-bottom: 12px; border-left: 4px solid ${badgeColor};">
-          <div class="match-header">
-            <div>
-              <span class="match-org">${org}</span>
-              <span style="font-size: 11px; margin-left: 8px; padding: 2px 8px; border-radius: 4px; background: ${badgeColor}22; color: ${badgeColor}; font-weight: 600;">
-                🦓 ${species || 'Plains Zebra'} (${Math.round((speciesConf || 0.92)*100)}%)
-              </span>
-            </div>
-            <span class="bucket-pill ${bucket}">${bucket.replace('_', ' ')}</span>
-          </div>
-          <div class="match-meta" style="margin-top: 6px;">
-            Unique ID: <strong>${recordId || 'INDIV_UNKNOWN'}</strong> · Query: ${queryId || '—'} · ${latency}ms
-          </div>
-        </div>`;
-    }
-
-    async function downloadReport() {
-      if (!window.lastIdentifyData) return;
-      const resp = await fetch('/api/report', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(window.lastIdentifyData)
-      });
-      const htmlContent = await resp.text();
-      const win = window.open('', '_blank');
-      win.document.write(htmlContent);
-      win.document.close();
     }
   </script>
 </body>

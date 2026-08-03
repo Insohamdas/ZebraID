@@ -101,21 +101,37 @@ class MixedPopulationBatchSampler(Sampler[list[int]]):
     def __iter__(self) -> Iterator[list[int]]:
         rng = random.Random(self.seed)
 
-        def _sample_indices(individuals: list[tuple[int, int]], n: int) -> list[int]:
-            """Randomly pick n indices from a pool of individuals."""
+        def _sample_indices(individuals: list[tuple[int, int]], n: int, k: int = 2) -> list[int]:
+            """
+            PK-Sampling: Pick P individuals, and K instances per individual.
+            Ensures that TripletLoss hard mining has valid positive pairs.
+            """
             indices: list[int] = []
             shuffled = individuals.copy()
             rng.shuffle(shuffled)
-            for ind_key in shuffled:
+            
+            p = max(1, n // k)
+            selected_indivs = shuffled[:p]
+            
+            # If we need more individuals than we have, cycle
+            while len(selected_indivs) < p:
+                selected_indivs.append(rng.choice(individuals))
+                
+            for ind_key in selected_indivs:
                 pool = self._pop_individual_to_indices[ind_key]
-                indices.append(rng.choice(pool))
-                if len(indices) >= n:
-                    break
-            # If we ran out of individuals before reaching n, cycle
+                # Sample k instances (with replacement if pool < k)
+                if len(pool) >= k:
+                    sampled = rng.sample(pool, k)
+                else:
+                    sampled = rng.choices(pool, k=k)
+                indices.extend(sampled)
+            
+            # If n is not perfectly divisible by k, or we need to pad
             while len(indices) < n:
                 ind_key = rng.choice(individuals)
                 pool = self._pop_individual_to_indices[ind_key]
                 indices.append(rng.choice(pool))
+                
             return indices[:n]
 
         for _ in range(self._num_batches):

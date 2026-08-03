@@ -221,23 +221,42 @@ def train(
 
     # ── Model + optimizer ────────────────────────────────────────────────────
     _free_gpu_memory(device)
-    # Avoid attempting to download pretrained weights in restricted network environments.
-    # Set pretrained=False so training can proceed offline / behind restrictive proxies.
     model = build_embedder(
         backbone_name=backbone_name,
         embedding_dim=cfg["model"]["embedding_dim"],
-        pretrained=False,
+        pretrained=True,
         device=device,
     )
 
+    # Differential Learning Rates
+    base_lr = cfg["training"]["learning_rate"]
+    backbone_params = []
+    projector_params = []
+    for name, param in model.named_parameters():
+        if "backbone" in name:
+            backbone_params.append(param)
+        else:
+            projector_params.append(param)
+
     optimizer = torch.optim.AdamW(
-        model.parameters(),
-        lr=cfg["training"]["learning_rate"],
+        [
+            {"params": backbone_params, "lr": base_lr * 0.1},
+            {"params": projector_params, "lr": base_lr},
+        ],
         weight_decay=cfg["training"]["weight_decay"],
     )
-    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-        optimizer, T_max=num_epochs
-    )
+
+    # Warmup + Cosine Annealing Scheduler
+    try:
+        from torch.optim.lr_scheduler import CosineAnnealingLR, LinearLR, SequentialLR
+        warmup_epochs = min(3, max(1, num_epochs // 5))  # Usually 1-3 epochs
+        warmup_scheduler = LinearLR(optimizer, start_factor=0.01, end_factor=1.0, total_iters=warmup_epochs)
+        cosine_scheduler = CosineAnnealingLR(optimizer, T_max=max(1, num_epochs - warmup_epochs))
+        scheduler = SequentialLR(optimizer, schedulers=[warmup_scheduler, cosine_scheduler], milestones=[warmup_epochs])
+    except ImportError:
+        # Fallback for older PyTorch versions (< 1.10)
+        from torch.optim.lr_scheduler import CosineAnnealingLR
+        scheduler = CosineAnnealingLR(optimizer, T_max=num_epochs)
     criterion = TripletLossWithMining(
         margin=cfg["training"]["triplet_margin"],
         mining_type=cfg["training"]["triplet_mining"],
@@ -258,9 +277,46 @@ def train(
     with open(csv_log_path, "w", newline="") as f:
         csv.DictWriter(f, fieldnames=csv_fields).writeheader()
 
+    # ── Startup Summary ───────────────────────────────────────────────────────
+    total_params = sum(p.numel() for p in model.parameters())
+    trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    frozen_params = total_params - trainable_params
+    backbone_params_count = sum(p.numel() for p in backbone_params)
+    projector_params_count = sum(p.numel() for p in projector_params)
+    
+    print("\n" + "="*60)
+    print("🚀 ZEBRAID TRAINING STARTUP SUMMARY")
+    print("="*60)
+    print(f"Model:                 {backbone_name}")
+    print(f"Total parameters:      {total_params:,}")
+    print(f"Trainable parameters:  {trainable_params:,}")
+    print(f"Frozen parameters:     {frozen_params:,}")
+    print(f"Backbone parameters:   {backbone_params_count:,}")
+    print(f"Projector parameters:  {projector_params_count:,}")
+    print(f"pretrained=True used:  True")
+    print(f"Input image size:      {cfg['model']['input_size']}")
+    print("-" * 60)
+    print("Optimizer Groups:")
+    for i, param_group in enumerate(optimizer.param_groups):
+        print(f"  Group {i}: lr = {param_group['lr']}")
+    print("-" * 60)
+    
+    _warmup = warmup_epochs if 'warmup_epochs' in locals() else 0
+    print(f"Warmup schedule:       {_warmup} epochs (LinearLR -> CosineAnnealingLR)")
+    
+    batch_sz = cfg['training']['batch_size']
+    accum = cfg['training']['accum_steps']
+    print(f"Batch size:            {batch_sz} (accum: {accum}) -> Effective: {batch_sz * accum}")
+    
+    if mode == "zebraid":
+        k_instances = 2
+        p_a = max(1, int(batch_sz * 0.5) // k_instances)
+        p_b = max(1, (batch_sz - int(batch_sz * 0.5)) // k_instances)
+        print(f"Batch composition:     {p_a} PopA indivs, {p_b} PopB indivs (K={k_instances} images/indiv)")
+    print("="*60 + "\n")
+
     # ── Training loop with gradient accumulation ──────────────────────────────
     best_rank1 = 0.0
-
     for epoch in range(1, num_epochs + 1):
         model.train()
         total_loss = 0.0
