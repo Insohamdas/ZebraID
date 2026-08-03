@@ -294,7 +294,14 @@ def train(
     print(f"Backbone parameters:   {backbone_params_count:,}")
     print(f"Projector parameters:  {projector_params_count:,}")
     print(f"pretrained=True used:  True")
-    print(f"Input image size:      {cfg['model']['input_size']}")
+    
+    input_size = (
+        cfg.get("model", {}).get("input_size")
+        or cfg.get("data", {}).get("image_size")
+        or "Unknown"
+    )
+    print(f"Input image size:      {input_size}")
+    
     print("-" * 60)
     print("Optimizer Groups:")
     for i, param_group in enumerate(optimizer.param_groups):
