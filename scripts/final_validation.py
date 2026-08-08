@@ -97,7 +97,36 @@ def run_preflight_checks():
     else:
         print("✅ Security audit: No obvious hardcoded secrets detected.")
 
+    # 9. Dataloader Smoke Test (Runtime Check)
+    try:
+        from zebraid.data.loaders import build_datasets
+        from zebraid.data.transforms import train_transforms
+        from torch.utils.data import DataLoader, RandomSampler
+        from zebraid.models.train import _worker_init_fn
+
+        # Using a dummy transform to avoid complex setup
+        t_train = train_transforms(224)
+        ds_a_train, ds_b_train = build_datasets("train", transform=t_train, split_seed=42)
+
+        train_loader = DataLoader(
+            ds_a_train,
+            batch_size=2,
+            sampler=RandomSampler(ds_a_train),
+            num_workers=2,
+            pin_memory=False,
+            drop_last=True,
+            persistent_workers=True,
+            worker_init_fn=_worker_init_fn,
+        )
+
+        batch = next(iter(train_loader))
+        print("✅ DataLoader Smoke Test passed: fetched a batch successfully without NameError in worker_init_fn.")
+    except Exception as e:
+        fatal_error(f"DataLoader Smoke Test failed: {e}")
+
     print("\n🚀 Pre-flight checks passed. Cleared for 30-epoch training.")
 
 if __name__ == "__main__":
+    import multiprocessing
+    multiprocessing.freeze_support()
     run_preflight_checks()
