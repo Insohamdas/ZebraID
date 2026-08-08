@@ -9,6 +9,11 @@ import re
 from pathlib import Path
 import yaml
 
+# Add the repository root to sys.path so the 'zebraid' package can be imported
+repo_root = str(Path(__file__).resolve().parents[1])
+if repo_root not in sys.path:
+    sys.path.insert(0, repo_root)
+
 def fatal_error(msg):
     print(f"❌ FATAL: {msg}")
     print("Cannot proceed with 30-epoch run. Please fix the codebase.")
