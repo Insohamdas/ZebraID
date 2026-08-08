@@ -114,7 +114,7 @@ def compute_cmc_map(
             # Query image
             q_sample = dataset.samples[i]
             q_img = Image.open(q_sample["file_path"]).convert("RGB")
-            if q_sample["bbox"] is not None:
+            if q_sample.get("bbox") is not None:
                 x, y, w, h = [int(v) for v in q_sample["bbox"]]
                 q_img = q_img.crop((x, y, x + w, y + h))
             
@@ -129,7 +129,7 @@ def compute_cmc_map(
                 ret_sample = dataset.samples[ret_idx]
                 
                 r_img = Image.open(ret_sample["file_path"]).convert("RGB")
-                if ret_sample["bbox"] is not None:
+                if ret_sample.get("bbox") is not None:
                     x, y, w, h = [int(v) for v in ret_sample["bbox"]]
                     r_img = r_img.crop((x, y, x + w, y + h))
                     
