@@ -51,11 +51,11 @@ zhash:
 
 # ── Training ──────────────────────────────────────────────────────────────────
 training:
-  batch_size: 4                              # micro-batch per GPU step (T4-safe for 384x384)
-  accum_steps: 4                             # gradient accumulation → effective batch = 4×4 = 16
+  batch_size: 128                            # Effective batch size for triplet mining
+  accum_steps: 1                             # No accumulation since batch fits in memory with frozen backbone
   num_epochs: 30
   learning_rate: 1.0e-4
-  weight_decay: 1.0e-4
+  weight_decay: 0.0                          # Disable weight decay to prevent Float16 underflow on projector
   loss: "triplet"                            # options: triplet | arcface
   triplet_margin: 0.3
   triplet_mining: "hard"

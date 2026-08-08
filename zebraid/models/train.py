@@ -262,21 +262,20 @@ def train(
         device=device,
     )
 
-    # Differential Learning Rates
+    # Linear Probing: Freeze backbone to preserve pretrained features
     base_lr = cfg["training"]["learning_rate"]
     backbone_params = []
     projector_params = []
     for name, param in model.named_parameters():
         if "backbone" in name:
+            param.requires_grad = False
             backbone_params.append(param)
         else:
             projector_params.append(param)
 
     optimizer = torch.optim.AdamW(
-        [
-            {"params": backbone_params, "lr": base_lr * 0.1},
-            {"params": projector_params, "lr": base_lr},
-        ],
+        projector_params,
+        lr=base_lr,
         weight_decay=cfg["training"]["weight_decay"],
     )
 
@@ -364,6 +363,8 @@ def train(
     best_rank1 = 0.0
     for epoch in range(1, num_epochs + 1):
         model.train()
+        # Protect backbone BN statistics from being ruined by micro-batches
+        model.backbone.eval()
         total_loss = 0.0
         t0 = time.time()
         
@@ -434,8 +435,8 @@ def train(
                 metrics_b = {"rank1": float("nan"), "map": float("nan")}
 
         lrs = scheduler.get_last_lr()
-        lr_bb = lrs[0]
-        lr_proj = lrs[1] if len(lrs) > 1 else lrs[0]
+        lr_bb = 0.0  # backbone is frozen
+        lr_proj = lrs[0]
 
         def _safe_round(v: float) -> float:
             return round(v, 4) if v == v else float("nan")  # nan check
