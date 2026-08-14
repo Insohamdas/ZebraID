@@ -119,13 +119,26 @@ def run_preflight_checks():
     else:
         print("✅ Evaluation NaN/Inf safety assertion verified.")
 
-    loaders_path = Path("zebraid/data/loaders.py")
-    with open(loaders_path, "r") as f:
-        loaders_code = f.read()
-    if "min_images_per_individual" not in loaders_code:
-        fatal_error("min_images_per_individual missing in loaders.py.")
-    else:
-        print("✅ Singleton filtering logic verified in loaders.py.")
+    # 11. Zero-Leakage Dataset Split Verification
+    try:
+        from zebraid.data.loaders import build_datasets
+        ds_a_tr, ds_b_tr = build_datasets("train", transform=None, split_seed=42, min_images_per_individual=2)
+        ds_a_va, ds_b_va = build_datasets("val",   transform=None, split_seed=42, min_images_per_individual=2)
+        ds_a_te, ds_b_te = build_datasets("test",  transform=None, split_seed=42, min_images_per_individual=2)
+
+        a_tr, a_va, a_te = set(ds_a_tr.individual_ids), set(ds_a_va.individual_ids), set(ds_a_te.individual_ids)
+        b_tr, b_va, b_te = set(ds_b_tr.individual_ids), set(ds_b_va.individual_ids), set(ds_b_te.individual_ids)
+
+        if not (a_tr.isdisjoint(a_va) and a_tr.isdisjoint(a_te) and a_va.isdisjoint(a_te)):
+            fatal_error(f"Pop A Identity Leakage! Train/Val overlap: {a_tr & a_va}")
+        if not (b_tr.isdisjoint(b_va) and b_tr.isdisjoint(b_te) and b_va.isdisjoint(b_te)):
+            fatal_error(f"Pop B Identity Leakage! Train/Val overlap: {b_tr & b_va}")
+        if not (a_tr | a_va | a_te).isdisjoint(b_tr | b_va | b_te):
+            fatal_error("Pop A and Pop B ID collision!")
+
+        print(f"✅ Zero identity leakage verified: Pop A ({len(a_tr)}/{len(a_va)}/{len(a_te)}), Pop B ({len(b_tr)}/{len(b_va)}/{len(b_te)}).")
+    except Exception as e:
+        fatal_error(f"Zero-leakage verification failed: {e}")
 
     print("\n🚀 Pre-flight checks passed. Cleared for 30-epoch training.")
 

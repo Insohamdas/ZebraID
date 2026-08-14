@@ -124,6 +124,63 @@ class TestSingletonHandling:
         assert stats["n_individuals"] == 53
 
 
+@pytest.mark.skipif(not DATASETS_AVAILABLE, reason="Real datasets required")
+class TestDatasetSplitLeakage:
+    """Dedicated regression tests ensuring zero train/val/test identity leakage."""
+
+    @pytest.mark.parametrize("seed", [42, 123, 999])
+    def test_zero_identity_leakage_across_all_splits(self, seed: int):
+        """Prove Train ∩ Val == 0, Train ∩ Test == 0, Val ∩ Test == 0 for Pop A & Pop B."""
+        ds_a_train, ds_b_train = build_datasets("train", transform=None, split_seed=seed, min_images_per_individual=2)
+        ds_a_val,   ds_b_val   = build_datasets("val",   transform=None, split_seed=seed, min_images_per_individual=2)
+        ds_a_test,  ds_b_test  = build_datasets("test",  transform=None, split_seed=seed, min_images_per_individual=2)
+
+        # Pop A Disjointness
+        a_tr = set(ds_a_train.individual_ids)
+        a_va = set(ds_a_val.individual_ids)
+        a_te = set(ds_a_test.individual_ids)
+
+        assert a_tr.isdisjoint(a_va), f"Seed {seed}: Pop A Train/Val identity leak! Overlap: {a_tr & a_va}"
+        assert a_tr.isdisjoint(a_te), f"Seed {seed}: Pop A Train/Test identity leak! Overlap: {a_tr & a_te}"
+        assert a_va.isdisjoint(a_te), f"Seed {seed}: Pop A Val/Test identity leak! Overlap: {a_va & a_te}"
+
+        # Pop B Disjointness
+        b_tr = set(ds_b_train.individual_ids)
+        b_va = set(ds_b_val.individual_ids)
+        b_te = set(ds_b_test.individual_ids)
+
+        assert b_tr.isdisjoint(b_va), f"Seed {seed}: Pop B Train/Val identity leak! Overlap: {b_tr & b_va}"
+        assert b_tr.isdisjoint(b_te), f"Seed {seed}: Pop B Train/Test identity leak! Overlap: {b_tr & b_te}"
+        assert b_va.isdisjoint(b_te), f"Seed {seed}: Pop B Val/Test identity leak! Overlap: {b_va & b_te}"
+
+        # Cross-Population Global ID Disjointness
+        all_a = a_tr | a_va | a_te
+        all_b = b_tr | b_va | b_te
+        assert all_a.isdisjoint(all_b), f"Seed {seed}: Global Pop A and Pop B ID collision! Overlap: {all_a & all_b}"
+
+    def test_exact_measured_split_counts(self):
+        """Verify exact measured image and identity counts on default seed 42."""
+        ds_a_tr, ds_b_tr = build_datasets("train", transform=None, split_seed=42, min_images_per_individual=2)
+        ds_a_va, ds_b_va = build_datasets("val",   transform=None, split_seed=42, min_images_per_individual=2)
+        ds_a_te, ds_b_te = build_datasets("test",  transform=None, split_seed=42, min_images_per_individual=2)
+
+        # Pop A
+        assert len(ds_a_tr) == 3796
+        assert ds_a_tr.num_individuals == 723
+        assert len(ds_a_va) == 797
+        assert ds_a_va.num_individuals == 154
+        assert len(ds_a_te) == 821
+        assert ds_a_te.num_individuals == 156
+
+        # Pop B
+        assert len(ds_b_tr) == 369
+        assert ds_b_tr.num_individuals == 53
+        assert len(ds_b_va) == 90
+        assert ds_b_va.num_individuals == 11
+        assert len(ds_b_te) == 130
+        assert ds_b_te.num_individuals == 13
+
+
 # ── 3. Evaluation Safety & Loud NaN/Inf Rejection ─────────────────────────────
 
 class MockDataset:

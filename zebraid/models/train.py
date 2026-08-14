@@ -214,16 +214,47 @@ def train(
         "train", transform=t_train, split_seed=split_seed, min_images_per_individual=min_images
     )
     ds_a_val,   ds_b_val   = build_datasets(
-        "val",   transform=t_eval,  split_seed=split_seed, min_images_per_individual=1  # include all for validation
+        "val",   transform=t_eval,  split_seed=split_seed, min_images_per_individual=min_images
+    )
+    ds_a_test,  ds_b_test  = build_datasets(
+        "test",  transform=t_eval,  split_seed=split_seed, min_images_per_individual=min_images
     )
 
-    print(
-        f"        Pop A train={len(ds_a_train)} imgs ({ds_a_train.num_individuals} indivs), "
-        f"val={len(ds_a_val)} imgs ({ds_a_val.num_individuals} indivs)\n"
-        f"        Pop B train={len(ds_b_train)} imgs ({ds_b_train.num_individuals} eligible indivs, "
-        f"{getattr(ds_b_train, 'excluded_singletons', 0)} singletons excluded), "
-        f"val={len(ds_b_val)} imgs ({ds_b_val.num_individuals} indivs)"
-    )
+    # ── Rigorous Identity Leakage Assertions ─────────────────────────────────
+    a_tr, a_va, a_te = set(ds_a_train.individual_ids), set(ds_a_val.individual_ids), set(ds_a_test.individual_ids)
+    b_tr, b_va, b_te = set(ds_b_train.individual_ids), set(ds_b_val.individual_ids), set(ds_b_test.individual_ids)
+
+    assert a_tr.isdisjoint(a_va), f"FATAL: Pop A Train/Val identity leak detected ({len(a_tr & a_va)} overlapping IDs)!"
+    assert a_tr.isdisjoint(a_te), f"FATAL: Pop A Train/Test identity leak detected ({len(a_tr & a_te)} overlapping IDs)!"
+    assert a_va.isdisjoint(a_te), f"FATAL: Pop A Val/Test identity leak detected ({len(a_va & a_te)} overlapping IDs)!"
+
+    assert b_tr.isdisjoint(b_va), f"FATAL: Pop B Train/Val identity leak detected ({len(b_tr & b_va)} overlapping IDs)!"
+    assert b_tr.isdisjoint(b_te), f"FATAL: Pop B Train/Test identity leak detected ({len(b_tr & b_te)} overlapping IDs)!"
+    assert b_va.isdisjoint(b_te), f"FATAL: Pop B Val/Test identity leak detected ({len(b_va & b_te)} overlapping IDs)!"
+
+    all_a_ids = a_tr | a_va | a_te
+    all_b_ids = b_tr | b_va | b_te
+    assert all_a_ids.isdisjoint(all_b_ids), f"FATAL: Pop A and Pop B ID collision detected ({len(all_a_ids & all_b_ids)} overlapping IDs)!"
+
+    print("\n" + "="*60)
+    print("📊 DATASET SPLIT & LEAKAGE DIAGNOSTICS")
+    print("="*60)
+    print(f"Population A (GZGC Plains Zebra, min_images>={min_images}):")
+    print(f"  Total Eligible Identities: {len(all_a_ids)}")
+    print(f"  Train: {len(ds_a_train):>5d} images across {len(a_tr):>4d} identities")
+    print(f"  Val:   {len(ds_a_val):>5d} images across {len(a_va):>4d} identities")
+    print(f"  Test:  {len(ds_a_test):>5d} images across {len(a_te):>4d} identities")
+    print(f"Population B (Mpala Grevy's Zebra, min_images>={min_images}):")
+    print(f"  Total Discovered: {getattr(ds_b_train, 'total_individuals', len(all_b_ids))} ({getattr(ds_b_train, 'excluded_singletons', 0)} singletons excluded)")
+    print(f"  Total Eligible Identities: {len(all_b_ids)}")
+    print(f"  Train: {len(ds_b_train):>5d} images across {len(b_tr):>4d} identities")
+    print(f"  Val:   {len(ds_b_val):>5d} images across {len(b_va):>4d} identities")
+    print(f"  Test:  {len(ds_b_test):>5d} images across {len(b_te):>4d} identities")
+    print("Identity Overlap Checks:")
+    print(f"  Pop A: Train ∩ Val = {len(a_tr & a_va)} | Train ∩ Test = {len(a_tr & a_te)} | Val ∩ Test = {len(a_va & a_te)} (ZERO LEAKAGE ✅)")
+    print(f"  Pop B: Train ∩ Val = {len(b_tr & b_va)} | Train ∩ Test = {len(b_tr & b_te)} | Val ∩ Test = {len(b_va & b_te)} (ZERO LEAKAGE ✅)")
+    print(f"  Cross: Pop A ∩ Pop B = {len(all_a_ids & all_b_ids)} (ZERO COLLISION ✅)")
+    print("="*60 + "\n")
 
     # ── Build dataloaders ────────────────────────────────────────────────────
     # pin_memory only helps with CUDA; disable for MPS and CPU
