@@ -64,6 +64,7 @@ class MixedPopulationBatchSampler(Sampler[list[int]]):
         self.n_b = batch_size - self.n_a
         self.drop_last = drop_last
         self.seed = seed
+        self.epoch = 0
 
         # ── Index samples by (population, individual_id) ────────────────────
         self._pop_individual_to_indices: dict[tuple[int, int], list[int]] = defaultdict(
@@ -95,16 +96,21 @@ class MixedPopulationBatchSampler(Sampler[list[int]]):
         if not drop_last and total_samples % batch_size != 0:
             self._num_batches += 1
 
+    def set_epoch(self, epoch: int) -> None:
+        """Sets the current training epoch for deterministic epoch-aware sampling."""
+        self.epoch = epoch
+
     def __len__(self) -> int:
         return self._num_batches
 
     def __iter__(self) -> Iterator[list[int]]:
-        rng = random.Random(self.seed)
+        epoch_seed = self.seed + self.epoch
+        rng = random.Random(epoch_seed)
 
         def _sample_indices(individuals: list[tuple[int, int]], n: int, k: int = 2) -> list[int]:
             """
-            PK-Sampling: Pick P individuals, and K instances per individual.
-            Ensures that TripletLoss hard mining has valid positive pairs.
+            PK-Sampling: Pick P individuals, and K distinct instances per individual.
+            Ensures that TripletLoss hard mining has valid positive pairs from distinct photos.
             """
             indices: list[int] = []
             shuffled = individuals.copy()
@@ -113,20 +119,26 @@ class MixedPopulationBatchSampler(Sampler[list[int]]):
             p = max(1, n // k)
             selected_indivs = shuffled[:p]
             
-            # If we need more individuals than we have, cycle
-            while len(selected_indivs) < p:
-                selected_indivs.append(rng.choice(individuals))
+            # If we need more individuals than unique individuals available, cycle deterministically
+            if len(selected_indivs) < p:
+                cycle_pool = shuffled.copy()
+                while len(selected_indivs) < p:
+                    if not cycle_pool:
+                        cycle_pool = shuffled.copy()
+                        rng.shuffle(cycle_pool)
+                    selected_indivs.append(cycle_pool.pop(0))
                 
             for ind_key in selected_indivs:
                 pool = self._pop_individual_to_indices[ind_key]
-                # Sample k instances (with replacement if pool < k)
-                if len(pool) >= k:
-                    sampled = rng.sample(pool, k)
-                else:
-                    sampled = rng.choices(pool, k=k)
+                if len(pool) < k:
+                    raise ValueError(
+                        f"Individual {ind_key} has only {len(pool)} images, but K={k} is required. "
+                        f"Singletons must be filtered before metric learning training."
+                    )
+                sampled = rng.sample(pool, k)
                 indices.extend(sampled)
             
-            # If n is not perfectly divisible by k, or we need to pad
+            # If n is not perfectly divisible by k, pad from eligible individuals
             while len(indices) < n:
                 ind_key = rng.choice(individuals)
                 pool = self._pop_individual_to_indices[ind_key]

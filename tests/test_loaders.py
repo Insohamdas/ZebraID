@@ -54,9 +54,11 @@ class TestGZGCDataset:
 
 class TestGrevysDataset:
     def test_sizes_reasonable(self):
-        ds = GrevysDataset(root=GREVYS_ROOT, split="train")
-        assert ds.num_individuals >= 100
+        ds = GrevysDataset(root=GREVYS_ROOT, split="train", min_images_per_individual=2)
+        assert ds.num_individuals >= 50
         assert len(ds) >= 300
+        ds_raw = GrevysDataset(root=GREVYS_ROOT, split="train", min_images_per_individual=1)
+        assert ds_raw.num_individuals >= 100
 
     def test_no_id_leakage_across_splits(self):
         train = GrevysDataset(root=GREVYS_ROOT, split="train")

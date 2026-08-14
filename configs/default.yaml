@@ -12,6 +12,7 @@ paths:
 # ── Datasets ─────────────────────────────────────────────────────────────────
 data:
   use_horizontal_flip: false
+  min_images_per_individual: 2
 
 datasets:
   population_a:

@@ -206,17 +206,23 @@ def train(
     from zebraid.data.loaders import build_datasets
     img_size = cfg["model"].get("img_size", 384 if backbone_name == "megadescriptor" else 224)
     use_flip = cfg.get("data", {}).get("use_horizontal_flip", False)
+    min_images = cfg.get("data", {}).get("min_images_per_individual", 2)
     t_train  = train_transforms(img_size, use_horizontal_flip=use_flip)
     t_eval   = eval_transforms(img_size)
 
-    ds_a_train, ds_b_train = build_datasets("train", transform=t_train, split_seed=split_seed)
-    ds_a_val,   ds_b_val   = build_datasets("val",   transform=t_eval,  split_seed=split_seed)
+    ds_a_train, ds_b_train = build_datasets(
+        "train", transform=t_train, split_seed=split_seed, min_images_per_individual=min_images
+    )
+    ds_a_val,   ds_b_val   = build_datasets(
+        "val",   transform=t_eval,  split_seed=split_seed, min_images_per_individual=1  # include all for validation
+    )
 
     print(
         f"        Pop A train={len(ds_a_train)} imgs ({ds_a_train.num_individuals} indivs), "
-        f"val={len(ds_a_val)} imgs\n"
-        f"        Pop B train={len(ds_b_train)} imgs ({ds_b_train.num_individuals} indivs), "
-        f"val={len(ds_b_val)} imgs"
+        f"val={len(ds_a_val)} imgs ({ds_a_val.num_individuals} indivs)\n"
+        f"        Pop B train={len(ds_b_train)} imgs ({ds_b_train.num_individuals} eligible indivs, "
+        f"{getattr(ds_b_train, 'excluded_singletons', 0)} singletons excluded), "
+        f"val={len(ds_b_val)} imgs ({ds_b_val.num_individuals} indivs)"
     )
 
     # ── Build dataloaders ────────────────────────────────────────────────────
@@ -306,7 +312,9 @@ def train(
     wandb_run    = _try_init_wandb(cfg, run_name)
     csv_log_path = out_dir / "training_log.csv"
     csv_fields   = [
-        "epoch", "train_loss", "rank1_a", "rank1_b", "map_a", "map_b", 
+        "epoch", "train_loss", 
+        "rank1_a", "rank1_b", "rank1_b_multi",
+        "map_a", "map_b", "map_b_multi",
         "lr_backbone", "lr_projector", 
         "throughput_img_sec", "dataloader_wait_pct", "peak_memory_mb"
     ]
@@ -365,6 +373,13 @@ def train(
         model.train()
         # Protect backbone BN statistics from being ruined by micro-batches
         model.backbone.eval()
+
+        # Update sampler epoch for deterministic epoch-aware shuffle
+        if hasattr(train_loader, "batch_sampler") and hasattr(train_loader.batch_sampler, "set_epoch"):
+            train_loader.batch_sampler.set_epoch(epoch)
+        elif hasattr(train_loader, "sampler") and hasattr(train_loader.sampler, "set_epoch"):
+            train_loader.sampler.set_epoch(epoch)
+
         total_loss = 0.0
         t0 = time.time()
         
@@ -432,7 +447,11 @@ def train(
             if mode in ("baseline_x", "zebraid"):
                 metrics_b = compute_cmc_map(model, ds_b_val, device, top_k=5)
             else:
-                metrics_b = {"rank1": float("nan"), "map": float("nan")}
+                metrics_b = {
+                    "rank1": float("nan"), "map": float("nan"),
+                    "rank1_multi": float("nan"), "map_multi": float("nan"),
+                    "n_queries": 0, "n_queries_multi": 0, "n_singletons": 0
+                }
 
         lrs = scheduler.get_last_lr()
         lr_bb = 0.0  # backbone is frozen
@@ -453,24 +472,27 @@ def train(
             peak_mem_mb = torch.mps.current_allocated_memory() / (1024 * 1024)
 
         row = {
-            "epoch":      epoch,
-            "train_loss": round(avg_loss, 4),
-            "rank1_a":    _safe_round(metrics_a["rank1"]),
-            "rank1_b":    _safe_round(metrics_b["rank1"]),
-            "map_a":      _safe_round(metrics_a["map"]),
-            "map_b":      _safe_round(metrics_b["map"]),
-            "lr_backbone": lr_bb,
-            "lr_projector": lr_proj,
+            "epoch":              epoch,
+            "train_loss":         round(avg_loss, 4),
+            "rank1_a":            _safe_round(metrics_a["rank1"]),
+            "rank1_b":            _safe_round(metrics_b["rank1"]),
+            "rank1_b_multi":      _safe_round(metrics_b.get("rank1_multi", float("nan"))),
+            "map_a":              _safe_round(metrics_a["map"]),
+            "map_b":              _safe_round(metrics_b["map"]),
+            "map_b_multi":        _safe_round(metrics_b.get("map_multi", float("nan"))),
+            "lr_backbone":        lr_bb,
+            "lr_projector":       lr_proj,
             "throughput_img_sec": round(throughput, 1),
             "dataloader_wait_pct": round(dl_wait_pct, 1),
-            "peak_memory_mb": round(peak_mem_mb, 1),
+            "peak_memory_mb":     round(peak_mem_mb, 1),
         }
 
         print(
             f"[Epoch {epoch:03d}/{num_epochs}] loss={avg_loss:.4f} "
             f"R1_A={metrics_a['rank1']:.3f} R1_B={metrics_b['rank1']:.3f} "
+            f"(R1_B_Multi={metrics_b.get('rank1_multi', float('nan')):.3f}) "
             f"mAP_A={metrics_a['map']:.3f} mAP_B={metrics_b['map']:.3f} "
-            f"| LR(bb)={lr_bb:.2e} LR(proj)={lr_proj:.2e} "
+            f"| LR(proj)={lr_proj:.2e} "
             f"({elapsed:.1f}s | {throughput:.1f} im/s | Mem: {peak_mem_mb:.0f} MB | DL Wait: {dl_wait_pct:.1f}%)"
         )
 
@@ -480,18 +502,39 @@ def train(
         if wandb_run:
             wandb_run.log(row)
 
-        # Save best checkpoint
+        # Save best checkpoint (rich state dictionary with backward-compatible loading)
         rank1_a = metrics_a["rank1"]
         rank1_b = metrics_b["rank1"] if metrics_b["rank1"] == metrics_b["rank1"] else 0.0
-        if (rank1_a + rank1_b) / 2 > best_rank1:
-            best_rank1 = (rank1_a + rank1_b) / 2
-            torch.save(model.state_dict(), out_dir / "best_model.pt")
+        val_score = (rank1_a + rank1_b) / 2
+        if val_score > best_rank1:
+            best_rank1 = val_score
+            checkpoint_payload = {
+                "model": model.state_dict(),
+                "optimizer": optimizer.state_dict(),
+                "scheduler": scheduler.state_dict(),
+                "epoch": epoch,
+                "best_metrics": {
+                    "rank1_a": metrics_a["rank1"],
+                    "rank1_b": metrics_b["rank1"],
+                    "rank1_b_multi": metrics_b.get("rank1_multi", float("nan")),
+                    "map_a": metrics_a["map"],
+                    "map_b": metrics_b["map"],
+                    "map_b_multi": metrics_b.get("map_multi", float("nan")),
+                    "val_score": val_score,
+                },
+                "rng_state": torch.get_rng_state(),
+                "config": cfg,
+            }
+            torch.save(checkpoint_payload, out_dir / "best_model.pt")
 
     # ── Final metrics ─────────────────────────────────────────────────────────
     _free_gpu_memory(device)
-    model.load_state_dict(
-        torch.load(out_dir / "best_model.pt", map_location=device, weights_only=True)
-    )
+    raw_ckpt = torch.load(out_dir / "best_model.pt", map_location=device, weights_only=False)
+    if isinstance(raw_ckpt, dict) and "model" in raw_ckpt:
+        model.load_state_dict(raw_ckpt["model"])
+    else:
+        model.load_state_dict(raw_ckpt)
+
     model.eval()
     with torch.no_grad():
         final_a = compute_cmc_map(
@@ -504,18 +547,28 @@ def train(
                 save_examples_dir=out_dir / "retrieval_examples" / "pop_b"
             )
             if mode in ("baseline_x", "zebraid")
-            else {"rank1": float("nan"), "map": float("nan")}
+            else {
+                "rank1": float("nan"), "map": float("nan"),
+                "rank1_multi": float("nan"), "map_multi": float("nan"),
+                "n_queries": 0, "n_queries_multi": 0, "n_singletons": 0
+            }
         )
 
     result = {
-        "mode":            mode,
-        "backbone":        backbone_name,
-        "seed":            split_seed,
-        "rank1_a":         final_a["rank1"],
-        "rank1_b":         final_b["rank1"],
-        "map_a":           final_a["map"],
-        "map_b":           final_b["map"],
-        "checkpoint_path": str(out_dir / "best_model.pt"),
+        "mode":              mode,
+        "backbone":          backbone_name,
+        "seed":              split_seed,
+        "rank1_a":           final_a["rank1"],
+        "rank1_b":           final_b["rank1"],
+        "rank1_b_multi":     final_b.get("rank1_multi", float("nan")),
+        "map_a":             final_a["map"],
+        "map_b":             final_b["map"],
+        "map_b_multi":       final_b.get("map_multi", float("nan")),
+        "n_queries_a":       final_a.get("n_queries", len(ds_a_val)),
+        "n_queries_b":       final_b.get("n_queries", len(ds_b_val) if mode in ("baseline_x", "zebraid") else 0),
+        "n_queries_b_multi": final_b.get("n_queries_multi", 0),
+        "n_singletons_b":    final_b.get("n_singletons", 0),
+        "checkpoint_path":   str(out_dir / "best_model.pt"),
     }
 
     with open(out_dir / "final_metrics.json", "w") as f:

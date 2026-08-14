@@ -73,28 +73,56 @@ def compute_cmc_map(
     embeddings = np.concatenate(all_embeddings, axis=0)  # (N, D)
     labels = np.array(all_labels)                         # (N,)
 
+    # ── Evaluation Safety Check ──────────────────────────────────────────────
+    if not np.isfinite(embeddings).all():
+        nan_count = int(np.isnan(embeddings).sum())
+        inf_count = int(np.isinf(embeddings).sum())
+        raise RuntimeError(
+            f"Evaluation Safety Check Failed: Extracted embeddings contain non-finite values "
+            f"({nan_count} NaNs, {inf_count} Infs out of {embeddings.size} total elements). "
+            f"Model weights or intermediate activations are corrupted."
+        )
+
+    from collections import Counter
+    label_counts = Counter(labels)
+
     N = len(labels)
-    rank1_correct = 0
-    rankk_correct = 0
-    ap_sum = 0.0
+    rank1_correct_all = 0
+    rankk_correct_all = 0
+    ap_sum_all = 0.0
+
+    rank1_correct_multi = 0
+    rankk_correct_multi = 0
+    ap_sum_multi = 0.0
+    n_queries_multi = 0
 
     for i in range(N):
         query_emb = embeddings[i]         # (D,)
         query_label = labels[i]
+        is_multi = (label_counts[query_label] > 1)
 
         # Cosine similarity against all gallery items (embeddings are L2-normalized)
         sims = embeddings @ query_emb     # (N,)
         sims[i] = -1.0                    # exclude query itself
+
+        if not np.isfinite(sims).all():
+            raise RuntimeError(
+                f"Evaluation Safety Check Failed: Cosine similarity vector for query index {i} "
+                f"contains NaN or Inf values."
+            )
 
         sorted_idx = np.argsort(-sims)    # descending
         sorted_labels = labels[sorted_idx]
 
         # CMC
         matches = sorted_labels == query_label
-        if matches[0]:
-            rank1_correct += 1
-        if matches[:top_k].any():
-            rankk_correct += 1
+        is_r1 = bool(matches[0])
+        is_rk = bool(matches[:top_k].any())
+
+        if is_r1:
+            rank1_correct_all += 1
+        if is_rk:
+            rankk_correct_all += 1
 
         # Average Precision
         match_positions = np.where(matches)[0] + 1  # 1-indexed
@@ -102,7 +130,18 @@ def compute_cmc_map(
             precision_at_k = [
                 (j + 1) / pos for j, pos in enumerate(match_positions)
             ]
-            ap_sum += np.mean(precision_at_k)
+            ap = float(np.mean(precision_at_k))
+        else:
+            ap = 0.0
+        ap_sum_all += ap
+
+        if is_multi:
+            n_queries_multi += 1
+            if is_r1:
+                rank1_correct_multi += 1
+            if is_rk:
+                rankk_correct_multi += 1
+            ap_sum_multi += ap
 
         # Save retrieval examples
         if save_examples_dir is not None and i < 20 and plt is not None:
@@ -150,11 +189,19 @@ def compute_cmc_map(
             plt.savefig(out_dir / f"{prefix}_query_{i}_id_{query_label}.png", bbox_inches='tight')
             plt.close()
 
+    n_singletons = N - n_queries_multi
+
     return {
-        "rank1":         rank1_correct / N,
-        "rank5":         rankk_correct / N,   # alias; equals rank{top_k} when top_k=5
-        f"rank{top_k}":  rankk_correct / N,
-        "map":           ap_sum / N,
-        "n_queries":     N,
+        "rank1":              rank1_correct_all / N if N > 0 else 0.0,
+        "rank5":              rankk_correct_all / N if N > 0 else 0.0,
+        f"rank{top_k}":       rankk_correct_all / N if N > 0 else 0.0,
+        "map":                ap_sum_all / N if N > 0 else 0.0,
+        "n_queries":          N,
+        "rank1_multi":        rank1_correct_multi / n_queries_multi if n_queries_multi > 0 else 0.0,
+        "rank5_multi":        rankk_correct_multi / n_queries_multi if n_queries_multi > 0 else 0.0,
+        f"rank{top_k}_multi": rankk_correct_multi / n_queries_multi if n_queries_multi > 0 else 0.0,
+        "map_multi":          ap_sum_multi / n_queries_multi if n_queries_multi > 0 else 0.0,
+        "n_queries_multi":    n_queries_multi,
+        "n_singletons":       n_singletons,
     }
 
