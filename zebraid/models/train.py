@@ -137,7 +137,8 @@ def _try_init_wandb(cfg: dict, run_name: str) -> Optional[object]:
 def train(
     config_path: str = "configs/default.yaml",
     mode: TrainingMode = "zebraid",
-    split_seed: int = 42,
+    seed: int = 42,
+    split_seed: Optional[int] = None,
     backbone_name: str = "megadescriptor",
     output_dir: Optional[str] = None,
     num_epochs: Optional[int] = None,
@@ -153,16 +154,21 @@ def train(
     if "training_mode" in kwargs:
         mode = kwargs["training_mode"]
     if "seed" in kwargs:
-        split_seed = kwargs["seed"]
+        seed = kwargs["seed"]
+    if "split_seed" in kwargs:
+        split_seed = kwargs["split_seed"]
     if "epochs" in kwargs and num_epochs is None:
         num_epochs = kwargs["epochs"]
 
-    seed_everything(split_seed)
+    cfg    = _load_config(config_path)
+    if split_seed is None:
+        split_seed = int(cfg.get("datasets", {}).get("split_seed", 42))
+
+    seed_everything(seed)
 
     # ── Set env var to reduce CUDA memory fragmentation ──────────────────────
     os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
 
-    cfg    = _load_config(config_path)
     device = _best_device()
 
     # ── Per-device batch defaults ────────────────────────────────────────────
@@ -182,14 +188,14 @@ def train(
 
     print(
         f"[train] device={device} ({device.type.upper()}), mode={mode}, "
-        f"backbone={backbone_name}, seed={split_seed}\n"
+        f"backbone={backbone_name}, seed={seed}, split_seed={split_seed}\n"
         f"        batch_size={batch_size}, accum_steps={accum_steps}, "
         f"effective_batch={effective_batch}, epochs={num_epochs}"
     )
 
     out_dir = (
         Path(output_dir or cfg["paths"]["checkpoint_dir"])
-        / mode / backbone_name / f"seed{split_seed}"
+        / mode / backbone_name / f"seed{seed}"
     )
     out_dir.mkdir(parents=True, exist_ok=True)
     
@@ -197,7 +203,7 @@ def train(
         out_dir=out_dir, 
         cfg=cfg, 
         command_args=sys.argv, 
-        seed=split_seed, 
+        seed=seed, 
         mode=mode, 
         backbone=backbone_name
     )
@@ -279,7 +285,7 @@ def train(
             combined_train,
             batch_size=batch_size,
             ratio_a=cfg["training"]["mixed_batch_ratio"],
-            seed=split_seed,
+            seed=seed,
         )
         train_loader = DataLoader(
             combined_train,
@@ -339,7 +345,7 @@ def train(
     scaler = torch.amp.GradScaler("cuda", enabled=use_scaler) if use_scaler else None
 
     # ── Logging ───────────────────────────────────────────────────────────────
-    run_name     = f"{mode}_{backbone_name}_seed{split_seed}"
+    run_name     = f"{mode}_{backbone_name}_seed{seed}"
     wandb_run    = _try_init_wandb(cfg, run_name)
     csv_log_path = out_dir / "training_log.csv"
     csv_fields   = [
@@ -588,7 +594,8 @@ def train(
     result = {
         "mode":              mode,
         "backbone":          backbone_name,
-        "seed":              split_seed,
+        "seed":              seed,
+        "split_seed":        split_seed,
         "rank1_a":           final_a["rank1"],
         "rank1_b":           final_b["rank1"],
         "rank1_b_multi":     final_b.get("rank1_multi", float("nan")),

@@ -123,7 +123,7 @@ def run_full_pipeline(
                 config_path=config_path,
                 mode=mode,
                 backbone_name=backbone,
-                split_seed=seed,
+                seed=seed,
                 num_epochs=num_epochs,
             )
             elapsed = time.time() - t0

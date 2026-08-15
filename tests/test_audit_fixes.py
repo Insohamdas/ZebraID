@@ -180,6 +180,58 @@ class TestDatasetSplitLeakage:
         assert len(ds_b_te) == 130
         assert ds_b_te.num_individuals == 13
 
+    def test_multi_seed_fixed_split_invariance(self):
+        """
+        Regression test: Asserting that training seeds 42, 43, and 44 use 100% identical
+        train, val, and test identity sets and query counts when split_seed is fixed at 42.
+        """
+        training_seeds = [42, 43, 44]
+        fixed_split_seed = 42
+
+        splits_data = {}
+        for t_seed in training_seeds:
+            # Under the fixed split_seed protocol, datasets are created with split_seed=42
+            ds_a_tr, ds_b_tr = build_datasets("train", transform=None, split_seed=fixed_split_seed, min_images_per_individual=2)
+            ds_a_va, ds_b_va = build_datasets("val",   transform=None, split_seed=fixed_split_seed, min_images_per_individual=2)
+            ds_a_te, ds_b_te = build_datasets("test",  transform=None, split_seed=fixed_split_seed, min_images_per_individual=2)
+
+            splits_data[t_seed] = {
+                "a_tr_ids": ds_a_tr.individual_ids,
+                "a_va_ids": ds_a_va.individual_ids,
+                "a_te_ids": ds_a_te.individual_ids,
+                "a_tr_len": len(ds_a_tr),
+                "a_va_len": len(ds_a_va),
+                "a_te_len": len(ds_a_te),
+                "b_tr_ids": ds_b_tr.individual_ids,
+                "b_va_ids": ds_b_va.individual_ids,
+                "b_te_ids": ds_b_te.individual_ids,
+                "b_tr_len": len(ds_b_tr),
+                "b_va_len": len(ds_b_va),
+                "b_te_len": len(ds_b_te),
+            }
+
+        # Reference baseline (seed 42)
+        ref = splits_data[42]
+
+        for t_seed in [43, 44]:
+            target = splits_data[t_seed]
+
+            # Pop A identity and query count invariance
+            assert target["a_tr_ids"] == ref["a_tr_ids"], f"Pop A Train IDs differ for seed {t_seed}"
+            assert target["a_va_ids"] == ref["a_va_ids"], f"Pop A Val IDs differ for seed {t_seed}"
+            assert target["a_te_ids"] == ref["a_te_ids"], f"Pop A Test IDs differ for seed {t_seed}"
+            assert target["a_tr_len"] == ref["a_tr_len"] == 3796, f"Pop A Train count differs for seed {t_seed}"
+            assert target["a_va_len"] == ref["a_va_len"] == 797,  f"Pop A Val count differs for seed {t_seed}"
+            assert target["a_te_len"] == ref["a_te_len"] == 821,  f"Pop A Test count differs for seed {t_seed}"
+
+            # Pop B identity and query count invariance
+            assert target["b_tr_ids"] == ref["b_tr_ids"], f"Pop B Train IDs differ for seed {t_seed}"
+            assert target["b_va_ids"] == ref["b_va_ids"], f"Pop B Val IDs differ for seed {t_seed}"
+            assert target["b_te_ids"] == ref["b_te_ids"], f"Pop B Test IDs differ for seed {t_seed}"
+            assert target["b_tr_len"] == ref["b_tr_len"] == 369, f"Pop B Train count differs for seed {t_seed}"
+            assert target["b_va_len"] == ref["b_va_len"] == 90,  f"Pop B Val count differs for seed {t_seed}"
+            assert target["b_te_len"] == ref["b_te_len"] == 130, f"Pop B Test count differs for seed {t_seed}"
+
 
 # ── 3. Evaluation Safety & Loud NaN/Inf Rejection ─────────────────────────────
 
