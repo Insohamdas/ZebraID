@@ -1,0 +1,202 @@
+{
+  "evaluation_protocol": {
+    "scope": "FINAL_HELD_OUT_TEST_EVALUATION",
+    "split_seed": 42,
+    "min_images_per_individual": 2,
+    "preprocessing": "eval_transforms (384x384 for MegaDescriptor, 224x224 for ResNet-50)",
+    "nan_inf_rejection_enabled": true,
+    "zero_leakage_guaranteed": true,
+    "leakage_audit": {
+      "pop_a_train_test_overlap": 0,
+      "pop_a_val_test_overlap": 0,
+      "pop_b_train_test_overlap": 0,
+      "pop_b_val_test_overlap": 0,
+      "cross_population_overlap": 0
+    },
+    "demographics": {
+      "population_a": {
+        "name": "GZGC (Plains Zebra)",
+        "held_out_identities": 156,
+        "total_queries": 821,
+        "valid_multi_image_queries": 821,
+        "singleton_queries": 0
+      },
+      "population_b": {
+        "name": "Labeled Mpala (Grevy's Zebra)",
+        "held_out_identities": 13,
+        "total_queries": 130,
+        "valid_multi_image_queries": 130,
+        "singleton_queries": 0
+      }
+    }
+  },
+  "primary_models_megadescriptor": {
+    "baseline_a": {
+      "name": "Baseline A (Within-Population Plains Zebra)",
+      "description": "MegaDescriptor-L-384 evaluated on Population A held-out test split",
+      "backbone": "megadescriptor",
+      "pop_a": {
+        "rank1": 0.8940316686967114,
+        "rank5": 0.9427527405602923,
+        "rank10": 0.9646772228989038,
+        "map": 0.6684396006645381,
+        "formatted": {
+          "rank1": "89.40%",
+          "rank5": "94.28%",
+          "rank10": "96.47%",
+          "map": "66.84%"
+        }
+      },
+      "pop_b": {
+        "rank1": 0.46923076923076923,
+        "rank5": 0.7307692307692307,
+        "rank10": 0.823076923076923,
+        "map": 0.3177224210455926,
+        "formatted": {
+          "rank1": "46.92%",
+          "rank5": "73.08%",
+          "rank10": "82.31%",
+          "map": "31.77%"
+        }
+      }
+    },
+    "baseline_x": {
+      "name": "Baseline X (Cross-Population Generalization Gap)",
+      "description": "MegaDescriptor-L-384 trained on Pop A only, tested on Pop B Grevy's Zebra",
+      "backbone": "megadescriptor",
+      "pop_a": {
+        "rank1": 0.8940316686967114,
+        "rank5": 0.9427527405602923,
+        "rank10": 0.9646772228989038,
+        "map": 0.6684396006645381,
+        "formatted": {
+          "rank1": "89.40%",
+          "rank5": "94.28%",
+          "rank10": "96.47%",
+          "map": "66.84%"
+        }
+      },
+      "pop_b": {
+        "rank1": 0.46923076923076923,
+        "rank5": 0.7307692307692307,
+        "rank10": 0.823076923076923,
+        "map": 0.3177224210455926,
+        "formatted": {
+          "rank1": "46.92%",
+          "rank5": "73.08%",
+          "rank10": "82.31%",
+          "map": "31.77%"
+        }
+      }
+    },
+    "zebraid": {
+      "name": "ZebraID (Mixed Cross-Population Model)",
+      "description": "ZebraID trained with mixed batch sampling across Pop A + Pop B (Seeds 42, 43, 44)",
+      "backbone": "megadescriptor",
+      "evaluated_seeds": [
+        42,
+        43,
+        44
+      ],
+      "pop_a": {
+        "rank1": {
+          "mean": 0.8948,
+          "std": 0.0111,
+          "formatted": "89.48 \u00b1 1.11%"
+        },
+        "rank5": {
+          "mean": 0.9399,
+          "std": 0.0025,
+          "formatted": "93.99 \u00b1 0.25%"
+        },
+        "rank10": {
+          "mean": 0.9545,
+          "std": 0.0019,
+          "formatted": "95.45 \u00b1 0.19%"
+        },
+        "map": {
+          "mean": 0.6533,
+          "std": 0.0053,
+          "formatted": "65.33 \u00b1 0.53%"
+        }
+      },
+      "pop_b": {
+        "rank1": {
+          "mean": 0.5154,
+          "std": 0.0308,
+          "formatted": "51.54 \u00b1 3.08%"
+        },
+        "rank5": {
+          "mean": 0.7538,
+          "std": 0.0353,
+          "formatted": "75.38 \u00b1 3.53%"
+        },
+        "rank10": {
+          "mean": 0.8231,
+          "std": 0.0277,
+          "formatted": "82.31 \u00b1 2.77%"
+        },
+        "map": {
+          "mean": 0.345,
+          "std": 0.0151,
+          "formatted": "34.50 \u00b1 1.51%"
+        }
+      }
+    }
+  },
+  "ablation_models_resnet50": {
+    "baseline_a": {
+      "name": "ResNet-50 Baseline A",
+      "pop_a": {
+        "rank1": 0.22168087697929353,
+        "rank5": 0.4092570036540804,
+        "rank10": 0.4993909866017052,
+        "map": 0.09594546985115501
+      },
+      "pop_b": {
+        "rank1": 0.2923076923076923,
+        "rank5": 0.6538461538461539,
+        "rank10": 0.7846153846153846,
+        "map": 0.23988209168107183
+      }
+    },
+    "baseline_x": {
+      "name": "ResNet-50 Baseline X",
+      "pop_a": {
+        "rank1": 0.22168087697929353,
+        "rank5": 0.4092570036540804,
+        "rank10": 0.4993909866017052,
+        "map": 0.09594546985115501
+      },
+      "pop_b": {
+        "rank1": 0.2923076923076923,
+        "rank5": 0.6538461538461539,
+        "rank10": 0.7846153846153846,
+        "map": 0.23988209168107183
+      }
+    },
+    "zebraid": {
+      "name": "ResNet-50 ZebraID",
+      "pop_a": {
+        "rank1": 0.243605359317905,
+        "rank5": 0.4348355663824604,
+        "rank10": 0.5310596833130329,
+        "map": 0.10470177238342766
+      },
+      "pop_b": {
+        "rank1": 0.34615384615384615,
+        "rank5": 0.6307692307692307,
+        "rank10": 0.7615384615384615,
+        "map": 0.2579440657611523
+      }
+    }
+  },
+  "key_findings": {
+    "pop_b_rank1_improvement_absolute": "+4.62%",
+    "pop_b_rank1_improvement_relative": "+9.84%",
+    "pop_b_map_improvement_absolute": "+2.73%",
+    "pop_b_map_improvement_relative": "+8.59%",
+    "pop_a_retention": "Plains zebra accuracy is fully preserved within standard error margin (89.48% \u00b1 1.11% vs 89.40%).",
+    "hypothesis_confirmed": true
+  }
+}

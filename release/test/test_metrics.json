@@ -1,0 +1,298 @@
+{
+  "evaluation_scope": "FINAL_HELD_OUT_TEST_EVALUATION",
+  "evaluated_seeds": [
+    42,
+    43,
+    44
+  ],
+  "fixed_split_seed": 42,
+  "backbone": "megadescriptor",
+  "n_seeds": 3,
+  "population_a": {
+    "dataset": "GZGC (Plains Zebra)",
+    "held_out_identities": 156,
+    "total_queries": 821,
+    "valid_queries": 821,
+    "singleton_queries": 0,
+    "rank1": {
+      "mean": 0.8948436865611042,
+      "std": 0.01105209710825513,
+      "ci95_low": 0.8673887553405609,
+      "ci95_high": 0.9222986177816476,
+      "formatted": "89.48% \u00b1 1.11%"
+    },
+    "rank5": {
+      "mean": 0.9399106780349168,
+      "std": 0.002535524968899066,
+      "ci95_low": 0.93361208484059,
+      "ci95_high": 0.9462092712292436,
+      "formatted": "93.99% \u00b1 0.25%"
+    },
+    "rank10": {
+      "mean": 0.9545269995939911,
+      "std": 0.0018605666646186781,
+      "ci95_low": 0.9499050957771863,
+      "ci95_high": 0.959148903410796,
+      "formatted": "95.45% \u00b1 0.19%"
+    },
+    "map": {
+      "mean": 0.6533036656661259,
+      "std": 0.005325190852093463,
+      "ci95_low": 0.6400751582481726,
+      "ci95_high": 0.6665321730840791,
+      "formatted": "65.33% \u00b1 0.53%"
+    },
+    "multi_image_rank1": {
+      "mean": 0.8948436865611042,
+      "std": 0.01105209710825513,
+      "ci95_low": 0.8673887553405609,
+      "ci95_high": 0.9222986177816476,
+      "formatted": "89.48% \u00b1 1.11%"
+    },
+    "multi_image_rank5": {
+      "mean": 0.9399106780349168,
+      "std": 0.002535524968899066,
+      "ci95_low": 0.93361208484059,
+      "ci95_high": 0.9462092712292436,
+      "formatted": "93.99% \u00b1 0.25%"
+    },
+    "multi_image_rank10": {
+      "mean": 0.9545269995939911,
+      "std": 0.0018605666646186781,
+      "ci95_low": 0.9499050957771863,
+      "ci95_high": 0.959148903410796,
+      "formatted": "95.45% \u00b1 0.19%"
+    },
+    "multi_image_map": {
+      "mean": 0.6533036656661259,
+      "std": 0.005325190852093463,
+      "ci95_low": 0.6400751582481726,
+      "ci95_high": 0.6665321730840791,
+      "formatted": "65.33% \u00b1 0.53%"
+    }
+  },
+  "population_b": {
+    "dataset": "Labeled Mpala (Grevy's Zebra)",
+    "held_out_identities": 13,
+    "total_queries": 130,
+    "valid_queries": 130,
+    "singleton_queries": 0,
+    "rank1": {
+      "mean": 0.5153846153846153,
+      "std": 0.030769230769230743,
+      "ci95_low": 0.43894960886922063,
+      "ci95_high": 0.59181962190001,
+      "formatted": "51.54% \u00b1 3.08%"
+    },
+    "rank5": {
+      "mean": 0.7538461538461538,
+      "std": 0.03525058226889106,
+      "ci95_low": 0.666278853070844,
+      "ci95_high": 0.8414134546214637,
+      "formatted": "75.38% \u00b1 3.53%"
+    },
+    "rank10": {
+      "mean": 0.8230769230769232,
+      "std": 0.02773500981126148,
+      "ci95_low": 0.754179339269003,
+      "ci95_high": 0.8919745068848433,
+      "formatted": "82.31% \u00b1 2.77%"
+    },
+    "map": {
+      "mean": 0.34497195306989353,
+      "std": 0.0150548105400002,
+      "ci95_low": 0.3075737304642227,
+      "ci95_high": 0.38237017567556436,
+      "formatted": "34.50% \u00b1 1.51%"
+    },
+    "multi_image_rank1": {
+      "mean": 0.5153846153846153,
+      "std": 0.030769230769230743,
+      "ci95_low": 0.43894960886922063,
+      "ci95_high": 0.59181962190001,
+      "formatted": "51.54% \u00b1 3.08%"
+    },
+    "multi_image_rank5": {
+      "mean": 0.7538461538461538,
+      "std": 0.03525058226889106,
+      "ci95_low": 0.666278853070844,
+      "ci95_high": 0.8414134546214637,
+      "formatted": "75.38% \u00b1 3.53%"
+    },
+    "multi_image_rank10": {
+      "mean": 0.8230769230769232,
+      "std": 0.02773500981126148,
+      "ci95_low": 0.754179339269003,
+      "ci95_high": 0.8919745068848433,
+      "formatted": "82.31% \u00b1 2.77%"
+    },
+    "multi_image_map": {
+      "mean": 0.34497195306989353,
+      "std": 0.0150548105400002,
+      "ci95_low": 0.3075737304642227,
+      "ci95_high": 0.38237017567556436,
+      "formatted": "34.50% \u00b1 1.51%"
+    }
+  },
+  "per_seed_results": {
+    "42": {
+      "evaluation_type": "HELD_OUT_TEST_EVALUATION",
+      "checkpoint_path": "/Users/sohamdas/Developer/ZebraID/checkpoints/zebraid/megadescriptor/seed42/best_model.pt",
+      "backbone": "megadescriptor",
+      "split_seed": 42,
+      "min_images_per_individual": 2,
+      "leakage_checks": {
+        "pop_a_train_test_overlap": 0,
+        "pop_a_val_test_overlap": 0,
+        "pop_b_train_test_overlap": 0,
+        "pop_b_val_test_overlap": 0,
+        "cross_population_overlap": 0,
+        "zero_leakage_verified": true
+      },
+      "population_a": {
+        "dataset_name": "GZGC (Plains Zebra)",
+        "n_identities": 156,
+        "total_queries": 821,
+        "valid_queries": 821,
+        "singleton_queries": 0,
+        "all_queries": {
+          "rank1": 0.8830694275274056,
+          "rank5": 0.9378806333739342,
+          "rank10": 0.9524969549330086,
+          "map": 0.6480110169523992
+        },
+        "multi_image_queries": {
+          "rank1": 0.8830694275274056,
+          "rank5": 0.9378806333739342,
+          "rank10": 0.9524969549330086,
+          "map": 0.6480110169523992
+        }
+      },
+      "population_b": {
+        "dataset_name": "Labeled Mpala (Grevy's Zebra)",
+        "n_identities": 13,
+        "total_queries": 130,
+        "valid_queries": 130,
+        "singleton_queries": 0,
+        "all_queries": {
+          "rank1": 0.4846153846153846,
+          "rank5": 0.7615384615384615,
+          "rank10": 0.8307692307692308,
+          "map": 0.3437634511249206
+        },
+        "multi_image_queries": {
+          "rank1": 0.4846153846153846,
+          "rank5": 0.7615384615384615,
+          "rank10": 0.8307692307692308,
+          "map": 0.3437634511249206
+        }
+      }
+    },
+    "43": {
+      "evaluation_type": "HELD_OUT_TEST_EVALUATION",
+      "checkpoint_path": "/Users/sohamdas/Developer/ZebraID/checkpoints/zebraid/megadescriptor/seed43/best_model.pt",
+      "backbone": "megadescriptor",
+      "split_seed": 42,
+      "min_images_per_individual": 2,
+      "leakage_checks": {
+        "pop_a_train_test_overlap": 0,
+        "pop_a_val_test_overlap": 0,
+        "pop_b_train_test_overlap": 0,
+        "pop_b_val_test_overlap": 0,
+        "cross_population_overlap": 0,
+        "zero_leakage_verified": true
+      },
+      "population_a": {
+        "dataset_name": "GZGC (Plains Zebra)",
+        "n_identities": 156,
+        "total_queries": 821,
+        "valid_queries": 821,
+        "singleton_queries": 0,
+        "all_queries": {
+          "rank1": 0.8964677222898904,
+          "rank5": 0.9427527405602923,
+          "rank10": 0.9561510353227771,
+          "map": 0.6532391673054301
+        },
+        "multi_image_queries": {
+          "rank1": 0.8964677222898904,
+          "rank5": 0.9427527405602923,
+          "rank10": 0.9561510353227771,
+          "map": 0.6532391673054301
+        }
+      },
+      "population_b": {
+        "dataset_name": "Labeled Mpala (Grevy's Zebra)",
+        "n_identities": 13,
+        "total_queries": 130,
+        "valid_queries": 130,
+        "singleton_queries": 0,
+        "all_queries": {
+          "rank1": 0.5153846153846153,
+          "rank5": 0.7153846153846154,
+          "rank10": 0.7923076923076923,
+          "map": 0.33055781655629984
+        },
+        "multi_image_queries": {
+          "rank1": 0.5153846153846153,
+          "rank5": 0.7153846153846154,
+          "rank10": 0.7923076923076923,
+          "map": 0.33055781655629984
+        }
+      }
+    },
+    "44": {
+      "evaluation_type": "HELD_OUT_TEST_EVALUATION",
+      "checkpoint_path": "/Users/sohamdas/Developer/ZebraID/checkpoints/zebraid/megadescriptor/seed44/best_model.pt",
+      "backbone": "megadescriptor",
+      "split_seed": 42,
+      "min_images_per_individual": 2,
+      "leakage_checks": {
+        "pop_a_train_test_overlap": 0,
+        "pop_a_val_test_overlap": 0,
+        "pop_b_train_test_overlap": 0,
+        "pop_b_val_test_overlap": 0,
+        "cross_population_overlap": 0,
+        "zero_leakage_verified": true
+      },
+      "population_a": {
+        "dataset_name": "GZGC (Plains Zebra)",
+        "n_identities": 156,
+        "total_queries": 821,
+        "valid_queries": 821,
+        "singleton_queries": 0,
+        "all_queries": {
+          "rank1": 0.904993909866017,
+          "rank5": 0.9390986601705238,
+          "rank10": 0.9549330085261876,
+          "map": 0.6586608127405484
+        },
+        "multi_image_queries": {
+          "rank1": 0.904993909866017,
+          "rank5": 0.9390986601705238,
+          "rank10": 0.9549330085261876,
+          "map": 0.6586608127405484
+        }
+      },
+      "population_b": {
+        "dataset_name": "Labeled Mpala (Grevy's Zebra)",
+        "n_identities": 13,
+        "total_queries": 130,
+        "valid_queries": 130,
+        "singleton_queries": 0,
+        "all_queries": {
+          "rank1": 0.5461538461538461,
+          "rank5": 0.7846153846153846,
+          "rank10": 0.8461538461538461,
+          "map": 0.36059459152846013
+        },
+        "multi_image_queries": {
+          "rank1": 0.5461538461538461,
+          "rank5": 0.7846153846153846,
+          "rank10": 0.8461538461538461,
+          "map": 0.36059459152846013
+        }
+      }
+    }
+  }
+}
