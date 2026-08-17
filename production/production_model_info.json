@@ -1,74 +1,53 @@
 {
   "model_name": "ZebraID Production Embedder (MegaDescriptor-L-384)",
   "model_version": "1.0.0",
-  "release_tag": "v1.0-prod",
-  "selection_rule": "Primary: Highest Pop-B validation mAP (48.18%), Secondary: Pop-B validation Rank-1 (60.00%)",
   "selected_seed": 44,
   "best_epoch": 12,
-  "checkpoint": {
-    "relative_path": "production/model/best_model.pt",
-    "source_path": "checkpoints/zebraid/megadescriptor/seed44/best_model.pt",
-    "size_bytes": 818769972,
-    "sha256": "3321915956649db169da38b8fa9ca1b26e735bcc40d71306ac83009909e88a80",
-    "git_commit": "8ba24ef0d3aca48cc394c153fbf05c816332ad65"
-  },
-  "dataset_splits": {
-    "split_seed": 42,
-    "min_images_per_individual": 2,
-    "population_a": "GZGC (Plains Zebra, Equus quagga)",
-    "population_b": "Labeled Mpala (Grevy's Zebra, Equus grevyi)"
-  },
+  "checkpoint_path": "production/model/best_model.pt",
+  "checkpoint_sha256": "3321915956649db169da38b8fa9ca1b26e735bcc40d71306ac83009909e88a80",
+  "checkpoint_size_bytes": 818769972,
+  "training_git_commit": "8ba24ef0d3aca48cc394c153fbf05c816332ad65",
+  "release_git_commit": "f7368c6573115478b49fcfa9e36735913906ea47",
+  "split_seed": 42,
+  "min_images_per_individual": 2,
+  "backbone": "MegaDescriptor-L-384 (wildlife-datasets / HuggingFace Hub BVRA/MegaDescriptor-L-384)",
+  "projector_architecture": "2-Layer MLP (2048 -> 2048 -> BatchNorm1d -> ReLU -> 512 -> L2 Normalize)",
+  "embedding_dimension": 512,
   "validation_metrics": {
+    "note": "Authoritative validation performance used for checkpoint selection",
     "population_a": {
-      "rank1": 0.90966,
-      "map": 0.64758
+      "species": "Plains Zebra (Equus quagga)",
+      "rank1": 0.9097,
+      "map": 0.6476
     },
     "population_b": {
+      "species": "Grevy's Zebra (Equus grevyi)",
       "rank1": 0.6,
       "map": 0.4818
     },
-    "composite_val_score": 0.75483
+    "composite_val_score": 0.7548
   },
-  "held_out_test_metrics_reference_only": {
-    "note": "Reference only \u2014 NOT used for model selection",
+  "held_out_test_metrics": {
+    "test_reference_only": true,
+    "note": "REFERENCE ONLY \u2014 Held-out test split metrics were NOT used for model selection",
     "seed44_individual": {
-      "pop_a_rank1": 0.90499,
-      "pop_a_map": 0.65866,
-      "pop_b_rank1": 0.54615,
-      "pop_b_map": 0.36059
+      "pop_a_rank1": 0.905,
+      "pop_a_map": 0.6587,
+      "pop_b_rank1": 0.5462,
+      "pop_b_map": 0.3606
     },
-    "multi_seed_aggregate": {
+    "three_seed_aggregate": {
       "pop_a_rank1": "89.48 \u00b1 1.11%",
       "pop_a_map": "65.33 \u00b1 0.53%",
       "pop_b_rank1": "51.54 \u00b1 3.08%",
       "pop_b_map": "34.50 \u00b1 1.51%"
     }
   },
-  "architecture": {
-    "backbone": "MegaDescriptor-L-384",
-    "backbone_pretrained_weights": "hf-hub:BVRA/MegaDescriptor-L-384 (wildlife-datasets)",
-    "embedding_dimension": 512,
-    "input_resolution": [
-      384,
-      384
-    ],
-    "projection_head": "2-Layer MLP (backbone_dim -> backbone_dim -> BatchNorm1d -> ReLU -> 512 -> L2 Normalize)",
-    "normalization": "L2 unit-sphere normalization (||e||_2 = 1.0)"
-  },
-  "training_configuration": {
-    "batch_size": 128,
-    "mixed_batch_ratio": 0.5,
-    "triplet_loss_margin": 0.3,
-    "triplet_mining": "hard",
-    "optimizer": "AdamW",
-    "learning_rate_projector": 0.0001,
-    "learning_rate_backbone": 0.0,
-    "horizontal_flips": false
-  },
-  "environment_provenance": {
+  "environment": {
     "python_version": "3.12.13",
     "pytorch_version": "2.10.0+cu128",
     "cuda_version": "12.8",
-    "gpu_model": "NVIDIA Tesla T4"
+    "gpu": "NVIDIA Tesla T4",
+    "os": "Linux / macOS"
   }
 }
