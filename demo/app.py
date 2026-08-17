@@ -121,7 +121,11 @@ def _get_model():
             _model = ("onnx", ort.InferenceSession(str(onnx_p), providers=["CPUExecutionProvider"]))
         elif Path(CHECKPOINT_PATH).exists():
             m = build_embedder("megadescriptor", embedding_dim=512, pretrained=False, device=device)
-            m.load_state_dict(torch.load(CHECKPOINT_PATH, map_location=device))
+            raw_ckpt = torch.load(CHECKPOINT_PATH, map_location=device, weights_only=False)
+            if isinstance(raw_ckpt, dict) and "model" in raw_ckpt:
+                m.load_state_dict(raw_ckpt["model"])
+            else:
+                m.load_state_dict(raw_ckpt)
             m.eval()
             _model = ("pytorch", m)
         else:

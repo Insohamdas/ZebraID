@@ -37,6 +37,7 @@ def compute_cmc_map(
     device: torch.device,
     top_k: int = 5,
     batch_size: int = 32,
+    num_workers: int = 2,
     save_examples_dir: str | Path | None = None,
 ) -> dict:
     """
@@ -52,12 +53,13 @@ def compute_cmc_map(
         device:     Torch device.
         top_k:      Rank-k accuracy to compute (default 5).
         batch_size: Batch size for embedding extraction.
+        num_workers: Number of workers for DataLoader.
         save_examples_dir: Optional directory to save visual retrieval examples.
 
     Returns:
-        Dict with keys: 'rank1', 'rank5' (or 'rankk'), 'map'.
+        Dict with keys: 'rank1', 'rank5', 'rank10', 'map', 'n_queries', etc.
     """
-    loader = DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=2)
+    loader = DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers)
 
     all_embeddings: list[np.ndarray] = []
     all_labels: list[int] = []
@@ -88,10 +90,14 @@ def compute_cmc_map(
 
     N = len(labels)
     rank1_correct_all = 0
+    rank5_correct_all = 0
+    rank10_correct_all = 0
     rankk_correct_all = 0
     ap_sum_all = 0.0
 
     rank1_correct_multi = 0
+    rank5_correct_multi = 0
+    rank10_correct_multi = 0
     rankk_correct_multi = 0
     ap_sum_multi = 0.0
     n_queries_multi = 0
@@ -116,11 +122,17 @@ def compute_cmc_map(
 
         # CMC
         matches = sorted_labels == query_label
-        is_r1 = bool(matches[0])
-        is_rk = bool(matches[:top_k].any())
+        is_r1 = bool(matches[0]) if len(matches) > 0 else False
+        is_r5 = bool(matches[:min(5, len(matches))].any()) if len(matches) > 0 else False
+        is_r10 = bool(matches[:min(10, len(matches))].any()) if len(matches) > 0 else False
+        is_rk = bool(matches[:min(top_k, len(matches))].any()) if len(matches) > 0 else False
 
         if is_r1:
             rank1_correct_all += 1
+        if is_r5:
+            rank5_correct_all += 1
+        if is_r10:
+            rank10_correct_all += 1
         if is_rk:
             rankk_correct_all += 1
 
@@ -139,6 +151,10 @@ def compute_cmc_map(
             n_queries_multi += 1
             if is_r1:
                 rank1_correct_multi += 1
+            if is_r5:
+                rank5_correct_multi += 1
+            if is_r10:
+                rank10_correct_multi += 1
             if is_rk:
                 rankk_correct_multi += 1
             ap_sum_multi += ap
@@ -193,12 +209,14 @@ def compute_cmc_map(
 
     return {
         "rank1":              rank1_correct_all / N if N > 0 else 0.0,
-        "rank5":              rankk_correct_all / N if N > 0 else 0.0,
+        "rank5":              rank5_correct_all / N if N > 0 else 0.0,
+        "rank10":             rank10_correct_all / N if N > 0 else 0.0,
         f"rank{top_k}":       rankk_correct_all / N if N > 0 else 0.0,
         "map":                ap_sum_all / N if N > 0 else 0.0,
         "n_queries":          N,
         "rank1_multi":        rank1_correct_multi / n_queries_multi if n_queries_multi > 0 else 0.0,
-        "rank5_multi":        rankk_correct_multi / n_queries_multi if n_queries_multi > 0 else 0.0,
+        "rank5_multi":        rank5_correct_multi / n_queries_multi if n_queries_multi > 0 else 0.0,
+        "rank10_multi":       rank10_correct_multi / n_queries_multi if n_queries_multi > 0 else 0.0,
         f"rank{top_k}_multi": rankk_correct_multi / n_queries_multi if n_queries_multi > 0 else 0.0,
         "map_multi":          ap_sum_multi / n_queries_multi if n_queries_multi > 0 else 0.0,
         "n_queries_multi":    n_queries_multi,

@@ -98,10 +98,17 @@ def run_compression_benchmark(
     img_size = 384
 
     # ── Load model ───────────────────────────────────────────────────────────
-    model = build_embedder(backbone_name=backbone_name,
-                           embedding_dim=cfg["model"]["embedding_dim"],
-                           pretrained=False, device=device)
-    model.load_state_dict(torch.load(checkpoint_path, map_location=device))
+    model = build_embedder(
+        backbone_name=backbone_name,
+        embedding_dim=cfg["model"]["embedding_dim"],
+        pretrained=False,
+        device=device,
+    )
+    raw_ckpt = torch.load(checkpoint_path, map_location=device, weights_only=False)
+    if isinstance(raw_ckpt, dict) and "model" in raw_ckpt:
+        model.load_state_dict(raw_ckpt["model"])
+    else:
+        model.load_state_dict(raw_ckpt)
     model.eval()
 
     # ── Load datasets ────────────────────────────────────────────────────────
