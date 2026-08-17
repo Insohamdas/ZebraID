@@ -1,0 +1,361 @@
+{
+  "model_loading": {
+    "device": "mps",
+    "load_time_sec": 2.991,
+    "total_parameters": 198349364,
+    "trainable_parameters": 0,
+    "frozen_parameters": 198349364,
+    "embedding_dimension": 512,
+    "all_parameters_finite": true
+  },
+  "embedding_validation": {
+    "total_samples_tested": 25,
+    "embedding_shape": [
+      1,
+      512
+    ],
+    "nan_count": 0,
+    "inf_count": 0,
+    "min_l2_norm": 1.0,
+    "max_l2_norm": 1.0,
+    "mean_l2_norm": 1.0,
+    "sample_records": [
+      {
+        "idx": 1,
+        "population": "Plains Zebra",
+        "individual_id": 505,
+        "shape": [
+          512
+        ],
+        "is_finite": true,
+        "l2_norm": 1.0
+      },
+      {
+        "idx": 2,
+        "population": "Plains Zebra",
+        "individual_id": 505,
+        "shape": [
+          512
+        ],
+        "is_finite": true,
+        "l2_norm": 1.0
+      },
+      {
+        "idx": 3,
+        "population": "Plains Zebra",
+        "individual_id": 505,
+        "shape": [
+          512
+        ],
+        "is_finite": true,
+        "l2_norm": 1.0
+      },
+      {
+        "idx": 4,
+        "population": "Plains Zebra",
+        "individual_id": 505,
+        "shape": [
+          512
+        ],
+        "is_finite": true,
+        "l2_norm": 1.0
+      },
+      {
+        "idx": 5,
+        "population": "Plains Zebra",
+        "individual_id": 505,
+        "shape": [
+          512
+        ],
+        "is_finite": true,
+        "l2_norm": 1.0
+      },
+      {
+        "idx": 6,
+        "population": "Plains Zebra",
+        "individual_id": 521,
+        "shape": [
+          512
+        ],
+        "is_finite": true,
+        "l2_norm": 1.0
+      },
+      {
+        "idx": 7,
+        "population": "Plains Zebra",
+        "individual_id": 521,
+        "shape": [
+          512
+        ],
+        "is_finite": true,
+        "l2_norm": 1.0
+      },
+      {
+        "idx": 8,
+        "population": "Plains Zebra",
+        "individual_id": 141,
+        "shape": [
+          512
+        ],
+        "is_finite": true,
+        "l2_norm": 1.0
+      },
+      {
+        "idx": 9,
+        "population": "Plains Zebra",
+        "individual_id": 141,
+        "shape": [
+          512
+        ],
+        "is_finite": true,
+        "l2_norm": 1.0
+      },
+      {
+        "idx": 10,
+        "population": "Plains Zebra",
+        "individual_id": 141,
+        "shape": [
+          512
+        ],
+        "is_finite": true,
+        "l2_norm": 1.0
+      },
+      {
+        "idx": 11,
+        "population": "Plains Zebra",
+        "individual_id": 141,
+        "shape": [
+          512
+        ],
+        "is_finite": true,
+        "l2_norm": 1.0
+      },
+      {
+        "idx": 12,
+        "population": "Plains Zebra",
+        "individual_id": 141,
+        "shape": [
+          512
+        ],
+        "is_finite": true,
+        "l2_norm": 1.0
+      },
+      {
+        "idx": 13,
+        "population": "Plains Zebra",
+        "individual_id": 141,
+        "shape": [
+          512
+        ],
+        "is_finite": true,
+        "l2_norm": 1.0
+      },
+      {
+        "idx": 14,
+        "population": "Plains Zebra",
+        "individual_id": 141,
+        "shape": [
+          512
+        ],
+        "is_finite": true,
+        "l2_norm": 1.0
+      },
+      {
+        "idx": 15,
+        "population": "Plains Zebra",
+        "individual_id": 141,
+        "shape": [
+          512
+        ],
+        "is_finite": true,
+        "l2_norm": 1.0
+      },
+      {
+        "idx": 16,
+        "population": "Grevy's Zebra",
+        "individual_id": 1973,
+        "shape": [
+          512
+        ],
+        "is_finite": true,
+        "l2_norm": 1.0
+      },
+      {
+        "idx": 17,
+        "population": "Grevy's Zebra",
+        "individual_id": 1973,
+        "shape": [
+          512
+        ],
+        "is_finite": true,
+        "l2_norm": 1.0
+      },
+      {
+        "idx": 18,
+        "population": "Grevy's Zebra",
+        "individual_id": 1980,
+        "shape": [
+          512
+        ],
+        "is_finite": true,
+        "l2_norm": 1.0
+      },
+      {
+        "idx": 19,
+        "population": "Grevy's Zebra",
+        "individual_id": 1980,
+        "shape": [
+          512
+        ],
+        "is_finite": true,
+        "l2_norm": 1.0
+      },
+      {
+        "idx": 20,
+        "population": "Grevy's Zebra",
+        "individual_id": 1909,
+        "shape": [
+          512
+        ],
+        "is_finite": true,
+        "l2_norm": 1.0
+      },
+      {
+        "idx": 21,
+        "population": "Grevy's Zebra",
+        "individual_id": 1909,
+        "shape": [
+          512
+        ],
+        "is_finite": true,
+        "l2_norm": 1.0
+      },
+      {
+        "idx": 22,
+        "population": "Grevy's Zebra",
+        "individual_id": 1909,
+        "shape": [
+          512
+        ],
+        "is_finite": true,
+        "l2_norm": 1.0
+      },
+      {
+        "idx": 23,
+        "population": "Grevy's Zebra",
+        "individual_id": 1909,
+        "shape": [
+          512
+        ],
+        "is_finite": true,
+        "l2_norm": 1.0
+      },
+      {
+        "idx": 24,
+        "population": "Grevy's Zebra",
+        "individual_id": 1909,
+        "shape": [
+          512
+        ],
+        "is_finite": true,
+        "l2_norm": 1.0
+      },
+      {
+        "idx": 25,
+        "population": "Grevy's Zebra",
+        "individual_id": 1909,
+        "shape": [
+          512
+        ],
+        "is_finite": true,
+        "l2_norm": 1.0
+      }
+    ]
+  },
+  "latency_profile": {
+    "preprocessing": {
+      "mean_ms": 12.13,
+      "median_ms": 3.53,
+      "p95_ms": 7.8,
+      "min_ms": 2.96,
+      "max_ms": 295.35
+    },
+    "forward_pass": {
+      "mean_ms": 15.94,
+      "median_ms": 14.23,
+      "p95_ms": 22.91,
+      "min_ms": 10.24,
+      "max_ms": 24.68
+    },
+    "l2_normalization": {
+      "mean_ms": 88.25,
+      "median_ms": 90.25,
+      "p95_ms": 92.59,
+      "min_ms": 80.88,
+      "max_ms": 92.89
+    },
+    "gallery_retrieval": {
+      "mean_ms": 0.17,
+      "median_ms": 0.15,
+      "p95_ms": 0.29,
+      "min_ms": 0.08,
+      "max_ms": 0.43
+    },
+    "total_end_to_end": {
+      "mean_ms": 116.49,
+      "median_ms": 108.24,
+      "p95_ms": 113.14,
+      "min_ms": 106.04,
+      "max_ms": 399.8
+    },
+    "throughput_fps": 8.6
+  },
+  "batch_benchmarks": [
+    {
+      "batch_size": 1,
+      "batch_latency_mean_ms": 85.69,
+      "per_image_latency_ms": 85.69,
+      "throughput_images_per_sec": 11.7
+    },
+    {
+      "batch_size": 8,
+      "batch_latency_mean_ms": 824.33,
+      "per_image_latency_ms": 103.04,
+      "throughput_images_per_sec": 9.7
+    },
+    {
+      "batch_size": 16,
+      "batch_latency_mean_ms": 1670.68,
+      "per_image_latency_ms": 104.42,
+      "throughput_images_per_sec": 9.6
+    }
+  ],
+  "safety_tests": [
+    {
+      "case": "corrupted_bytes",
+      "status": "PASS",
+      "caught": "UnidentifiedImageError"
+    },
+    {
+      "case": "empty_bytes",
+      "status": "PASS",
+      "caught": "UnidentifiedImageError"
+    },
+    {
+      "case": "tiny_1x1_pixel",
+      "status": "PASS",
+      "norm": 0.9999999403953552
+    },
+    {
+      "case": "large_2000x2000_image",
+      "status": "PASS",
+      "norm": 1.0
+    }
+  ],
+  "api_tests": {
+    "get_health": "PASS (200 OK)",
+    "post_identify_valid": "PASS (200 OK)",
+    "post_identify_missing_file": "PASS (422 Unprocessable)",
+    "post_identify_malformed": "PASS (422 Unprocessable)"
+  }
+}
