@@ -1,0 +1,9 @@
+method,seed,population,rank1,rank5,rank10,map,n_queries
+Baseline A/X,42 (Pop-A Only),Population A,89.40%,94.28%,96.47%,66.84%,821
+Baseline A/X,42 (Pop-A Only),Population B,46.92%,73.08%,82.31%,31.77%,130
+ZebraID,42,Population A,88.31%,93.79%,95.25%,64.80%,821
+ZebraID,42,Population B,48.46%,76.15%,83.08%,34.38%,130
+ZebraID,43,Population A,89.65%,94.28%,95.62%,65.32%,821
+ZebraID,43,Population B,51.54%,71.54%,79.23%,33.06%,130
+ZebraID,44,Population A,90.50%,93.91%,95.49%,65.87%,821
+ZebraID,44,Population B,54.62%,78.46%,84.62%,36.06%,130

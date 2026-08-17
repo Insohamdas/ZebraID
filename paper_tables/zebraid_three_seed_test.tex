@@ -1,0 +1,20 @@
+\begin{table*}[h]
+\centering
+\small
+\caption{\textbf{ZebraID Three-Seed Held-Out Test Evaluation.} Individual seed performance and multi-seed statistics on held-out test splits with fixed $\text{split\_seed}=42$.}
+\label{tab:zebraid_three_seed_test}
+\begin{tabular}{lcccccccc}
+\toprule
+\multirow{2}{*}{\textbf{Run}} & \multicolumn{4}{c}{\textbf{Population A — Plains Zebra ($N=821$)}} & \multicolumn{4}{c}{\textbf{Population B — Grevy's Zebra ($N=130$)}} \\
+\cmidrule(lr){2-5} \cmidrule(lr){6-9}
+& \textbf{Rank-1 (\%)} & \textbf{Rank-5 (\%)} & \textbf{Rank-10 (\%)} & \textbf{mAP (\%)} & \textbf{Rank-1 (\%)} & \textbf{Rank-5 (\%)} & \textbf{Rank-10 (\%)} & \textbf{mAP (\%)} \\
+\midrule
+Seed 42 & 88.31 & 93.79 & 95.25 & 64.80 & 48.46 & 76.15 & 83.08 & 34.38 \\
+Seed 43 & 89.65 & 94.28 & 95.62 & 65.32 & 51.54 & 71.54 & 79.23 & 33.06 \\
+Seed 44 & 90.50 & 93.91 & 95.49 & 65.87 & 54.62 & 78.46 & 84.62 & 36.06 \\
+\midrule
+\textbf{Mean} & \textbf{89.48} & \textbf{93.99} & \textbf{95.45} & \textbf{65.33} & \textbf{51.54} & \textbf{75.38} & \textbf{82.31} & \textbf{34.50} \\
+\textbf{Std}  & 1.11 & 0.25 & 0.19 & 0.53 & 3.08 & 3.53 & 2.77 & 1.51 \\
+\bottomrule
+\end{tabular}
+\end{table*}

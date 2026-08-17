@@ -1,0 +1,18 @@
+\begin{table*}[t]
+\centering
+\small
+\caption{\textbf{Main Re-Identification Results on Held-Out Test Splits.} Evaluation on unseen held-out identities from Population A (Plains Zebra, $N=821$) and Population B (Grevy's Zebra, $N=130$) under fixed split seed $\text{split\_seed}=42$ with zero data leakage. Baseline X represents the in-domain Pop-A-trained MegaDescriptor-L-384 model. ZebraID results are reported as $\text{Mean} \pm \text{Std Dev}$ across three training seeds (42, 43, 44).}
+\label{tab:main_results}
+\begin{tabular}{lcccccccc}
+\toprule
+\multirow{2}{*}{\textbf{Method}} & \multicolumn{4}{c}{\textbf{Population A — Plains Zebra ($N=821$)}} & \multicolumn{4}{c}{\textbf{Population B — Grevy's Zebra ($N=130$)}} \\
+\cmidrule(lr){2-5} \cmidrule(lr){6-9}
+& \textbf{Rank-1 (\%)} & \textbf{Rank-5 (\%)} & \textbf{Rank-10 (\%)} & \textbf{mAP (\%)} & \textbf{Rank-1 (\%)} & \textbf{Rank-5 (\%)} & \textbf{Rank-10 (\%)} & \textbf{mAP (\%)} \\
+\midrule
+Baseline X & 89.40 & 94.28 & \textbf{96.47} & \textbf{66.84} & 46.92 & 73.08 & 82.31 & 31.77 \\
+\textbf{ZebraID (Ours)} & \textbf{89.48 $\pm$ 1.11} & 93.99 $\pm$ 0.25 & 95.45 $\pm$ 0.19 & 65.33 $\pm$ 0.53 & \textbf{51.54 $\pm$ 3.08} & \textbf{75.38 $\pm$ 3.53} & \textbf{82.31 $\pm$ 2.77} & \textbf{34.50 $\pm$ 1.51} \\
+\midrule
+$\Delta$ ZebraID vs Baseline X & +0.08 pp & -0.29 pp & -1.02 pp & -1.51 pp & \textbf{+4.62 pp} & \textbf{+2.30 pp} & +0.00 pp & \textbf{+2.73 pp} \\
+\bottomrule
+\end{tabular}
+\end{table*}
