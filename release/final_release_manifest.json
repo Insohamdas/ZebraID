@@ -1,0 +1,117 @@
+{
+  "release_name": "ZebraID",
+  "release_version": "v1.0",
+  "release_date": "2026-08-17 19:40:45 UTC",
+  "release_git_commit": "b4173c962345b7057b78b824c83aeb93e0de20eb",
+  "historical_training_commits": {
+    "seed42": "7f3ae22d17f8e810c0f6015afac13010dc54ed83",
+    "seed43": "8ba24ef0d3aca48cc394c153fbf05c816332ad65",
+    "seed44": "8ba24ef0d3aca48cc394c153fbf05c816332ad65"
+  },
+  "selected_production_checkpoint": {
+    "seed": 44,
+    "best_epoch": 12,
+    "checkpoint_path": "production/model/best_model.pt",
+    "sha256": "3321915956649db169da38b8fa9ca1b26e735bcc40d71306ac83009909e88a80",
+    "size_bytes": 818769972,
+    "embedding_dimension": 512,
+    "l2_normalized": true,
+    "selection_rule": "Highest Pop-B Validation mAP (48.18%)"
+  },
+  "dataset_provenance": {
+    "split_seed": 42,
+    "min_images_per_individual": 2,
+    "zero_leakage_verified": true,
+    "counts": {
+      "population_a": {
+        "species": "Plains Zebra (Equus quagga)",
+        "train": {
+          "images": 3796,
+          "identities": 723
+        },
+        "val": {
+          "images": 797,
+          "identities": 154
+        },
+        "test": {
+          "images": 821,
+          "identities": 156
+        },
+        "total_eligible": {
+          "images": 5414,
+          "identities": 1033
+        }
+      },
+      "population_b": {
+        "species": "Grevy's Zebra (Equus grevyi)",
+        "train": {
+          "images": 369,
+          "identities": 53
+        },
+        "val": {
+          "images": 90,
+          "identities": 11
+        },
+        "test": {
+          "images": 130,
+          "identities": 13
+        },
+        "total_eligible": {
+          "images": 589,
+          "identities": 77
+        }
+      }
+    }
+  },
+  "validation_performance": {
+    "selected_seed44": {
+      "pop_a_rank1": 0.9097,
+      "pop_a_map": 0.6476,
+      "pop_b_rank1": 0.6,
+      "pop_b_map": 0.4818
+    },
+    "three_seed_aggregate": {
+      "pop_a_rank1": "91.18 \u00b1 0.19%",
+      "pop_a_map": "64.39 \u00b1 0.38%",
+      "pop_b_rank1": "61.11 \u00b1 1.11%",
+      "pop_b_map": "47.93 \u00b1 0.28%"
+    }
+  },
+  "held_out_test_performance_reference_only": {
+    "selected_seed44": {
+      "pop_a_rank1": 0.905,
+      "pop_a_map": 0.6587,
+      "pop_b_rank1": 0.5462,
+      "pop_b_map": 0.3606
+    },
+    "three_seed_aggregate": {
+      "pop_a_rank1": "89.48 \u00b1 1.11%",
+      "pop_a_map": "65.33 \u00b1 0.53%",
+      "pop_b_rank1": "51.54 \u00b1 3.08%",
+      "pop_b_map": "34.50 \u00b1 1.51%"
+    },
+    "baseline_x_comparison": {
+      "pop_b_rank1_delta": "+4.62 percentage points (+9.85% relative)",
+      "pop_b_map_delta": "+2.73 percentage points (+8.59% relative)",
+      "pop_a_rank1_delta": "+0.08 percentage points",
+      "pop_a_map_delta": "-1.51 percentage points"
+    }
+  },
+  "production_inference_benchmarks": {
+    "hardware": "mps",
+    "preprocessing_mean_ms": 6.89,
+    "forward_pass_mean_ms": 104.56,
+    "l2_norm_transfer_mean_ms": 1.27,
+    "retrieval_mean_ms": 0.21,
+    "total_latency_mean_ms": 112.93,
+    "total_latency_p95_ms": 114.86,
+    "throughput_fps": 8.9
+  },
+  "software_environment": {
+    "python": "3.11.7",
+    "pytorch": "2.13.0",
+    "torchvision": "0.18+",
+    "fastapi": "0.111+",
+    "faiss": "1.8+"
+  }
+}

@@ -31,15 +31,17 @@ Tested across 25 real wildlife images:
 
 ## 3. Latency & Batch Throughput Profiling
 
-Measured on `mps`:
+Measured on `mps` with explicit hardware synchronization (`torch.mps.synchronize()`):
 
 | Inference Stage | Mean Latency (ms) | Median Latency (ms) | p95 Latency (ms) |
 |---|:---:|:---:|:---:|
-| **1. Image Preprocessing** | 12.13 ms | 3.53 ms | 7.8 ms |
-| **2. Backbone & Projector Forward** | 15.94 ms | 14.23 ms | 22.91 ms |
-| **3. L2 Normalization** | 88.25 ms | 90.25 ms | 92.59 ms |
-| **4. Gallery Retrieval (1k Gallery)** | 0.17 ms | 0.15 ms | 0.29 ms |
-| **Total End-to-End Pipeline** | **116.49 ms** | **108.24 ms** | **113.14 ms** |
+| **1. Image Preprocessing** | 6.89 ms | 7.00 ms | 8.37 ms |
+| **2. Backbone & Projector Forward** | 104.56 ms | 104.64 ms | 105.19 ms |
+| **3. L2 Normalization & Host Copy** | 1.27 ms | 1.30 ms | 2.47 ms |
+| **4. Gallery Retrieval (1k Gallery)** | 0.21 ms | 0.20 ms | 0.26 ms |
+| **Total End-to-End Pipeline** | **112.93 ms** | **113.19 ms** | **114.86 ms** |
+
+- **Peak Single-Stream Throughput:** **8.9 images/sec** on Apple Silicon MPS
 
 ### Batch Scaling
 - **Batch 1:** 85.69 ms/image (11.7 img/sec)
@@ -52,6 +54,6 @@ Measured on `mps`:
 
 - **`GET /health`:** `200 OK`
 - **`POST /identify` (Valid):** `200 OK` (Generated 512-d embedding & 256-bit Z-Hash)
-- **`POST /identify` (Corrupted Payload):** Graceful error catch without crash
+- **`POST /identify` (Empty / Corrupted Payload):** `400 Bad Request` (Safely caught without server crash)
 - **`POST /identify` (Missing File):** `422 Unprocessable Entity`
 - **`POST /identify` (Malformed Form):** `422 Unprocessable Entity`

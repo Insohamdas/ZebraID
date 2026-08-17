@@ -1,0 +1,53 @@
+{
+  "model_name": "ZebraID Production Embedder (MegaDescriptor-L-384)",
+  "model_version": "1.0.0",
+  "selected_seed": 44,
+  "best_epoch": 12,
+  "checkpoint_path": "production/model/best_model.pt",
+  "checkpoint_sha256": "3321915956649db169da38b8fa9ca1b26e735bcc40d71306ac83009909e88a80",
+  "checkpoint_size_bytes": 818769972,
+  "training_git_commit": "8ba24ef0d3aca48cc394c153fbf05c816332ad65",
+  "release_git_commit": "f7368c6573115478b49fcfa9e36735913906ea47",
+  "split_seed": 42,
+  "min_images_per_individual": 2,
+  "backbone": "MegaDescriptor-L-384 (wildlife-datasets / HuggingFace Hub BVRA/MegaDescriptor-L-384)",
+  "projector_architecture": "2-Layer MLP (2048 -> 2048 -> BatchNorm1d -> ReLU -> 512 -> L2 Normalize)",
+  "embedding_dimension": 512,
+  "validation_metrics": {
+    "note": "Authoritative validation performance used for checkpoint selection",
+    "population_a": {
+      "species": "Plains Zebra (Equus quagga)",
+      "rank1": 0.9097,
+      "map": 0.6476
+    },
+    "population_b": {
+      "species": "Grevy's Zebra (Equus grevyi)",
+      "rank1": 0.6,
+      "map": 0.4818
+    },
+    "composite_val_score": 0.7548
+  },
+  "held_out_test_metrics": {
+    "test_reference_only": true,
+    "note": "REFERENCE ONLY \u2014 Held-out test split metrics were NOT used for model selection",
+    "seed44_individual": {
+      "pop_a_rank1": 0.905,
+      "pop_a_map": 0.6587,
+      "pop_b_rank1": 0.5462,
+      "pop_b_map": 0.3606
+    },
+    "three_seed_aggregate": {
+      "pop_a_rank1": "89.48 \u00b1 1.11%",
+      "pop_a_map": "65.33 \u00b1 0.53%",
+      "pop_b_rank1": "51.54 \u00b1 3.08%",
+      "pop_b_map": "34.50 \u00b1 1.51%"
+    }
+  },
+  "environment": {
+    "python_version": "3.12.13",
+    "pytorch_version": "2.10.0+cu128",
+    "cuda_version": "12.8",
+    "gpu": "NVIDIA Tesla T4",
+    "os": "Linux / macOS"
+  }
+}

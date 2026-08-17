@@ -34,7 +34,7 @@ from typing import Optional
 
 import numpy as np
 import uvicorn
-from fastapi import FastAPI, File, Form, UploadFile, Request
+from fastapi import FastAPI, File, Form, UploadFile, Request, HTTPException
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -213,7 +213,12 @@ async def identify(
 
     # ── Load image ────────────────────────────────────────────────────────────
     image_bytes = await file.read()
-    pil_image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+    if not image_bytes:
+        raise HTTPException(status_code=400, detail="Uploaded file is empty.")
+    try:
+        pil_image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Cannot decode image file: {str(e)}")
     image_size = pil_image.size
 
     # ── Run inference ─────────────────────────────────────────────────────────

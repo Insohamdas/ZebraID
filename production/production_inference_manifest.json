@@ -21,9 +21,9 @@
     "preprocessing_version": "v1.0 (ImageNet normalized, 0% flips)"
   },
   "performance_sla": {
-    "mean_latency_ms": 116.49,
-    "p95_latency_ms": 113.14,
-    "peak_throughput_fps": 8.6,
+    "mean_latency_ms": 112.93,
+    "p95_latency_ms": 114.86,
+    "peak_throughput_fps": 8.9,
     "finite_activation_rate": "100.0%",
     "nan_inf_rate": "0.0%"
   },
