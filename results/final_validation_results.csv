@@ -1,0 +1,7 @@
+method,seed,split_seed,population,rank1,map,best_epoch
+ZebraID,42,42,Population A,91.22%,64.40%,3
+ZebraID,42,42,Population B,61.11%,47.63%,3
+ZebraID,43,42,Population A,91.34%,64.00%,8
+ZebraID,43,42,Population B,62.22%,47.97%,8
+ZebraID,44,42,Population A,90.97%,64.76%,12
+ZebraID,44,42,Population B,60.00%,48.18%,12

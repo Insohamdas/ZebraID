@@ -37,7 +37,7 @@ try:
     import uvicorn
 except ImportError:
     uvicorn = None
-from fastapi import FastAPI, File, Form, UploadFile, Request
+from fastapi import FastAPI, File, Form, UploadFile, Request, HTTPException
 import fastapi.dependencies.utils
 fastapi.dependencies.utils.ensure_multipart_is_installed = lambda: None
 from fastapi.responses import HTMLResponse, JSONResponse
@@ -152,7 +152,11 @@ def _get_model():
             _model = ("onnx", ort.InferenceSession(str(onnx_p), providers=["CPUExecutionProvider"]))
         elif Path(CHECKPOINT_PATH).exists():
             m = build_embedder("megadescriptor", embedding_dim=512, pretrained=False, device=device)
-            m.load_state_dict(torch.load(CHECKPOINT_PATH, map_location=device))
+            raw_ckpt = torch.load(CHECKPOINT_PATH, map_location=device, weights_only=False)
+            if isinstance(raw_ckpt, dict) and "model" in raw_ckpt:
+                m.load_state_dict(raw_ckpt["model"])
+            else:
+                m.load_state_dict(raw_ckpt)
             m.eval()
             _model = ("pytorch", m)
         else:
@@ -240,7 +244,12 @@ async def identify(
 
     # ── Load image ────────────────────────────────────────────────────────────
     image_bytes = await file.read()
-    pil_image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+    if not image_bytes:
+        raise HTTPException(status_code=400, detail="Uploaded file is empty.")
+    try:
+        pil_image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Cannot decode image file: {str(e)}")
     image_size = pil_image.size
 
     # ── Run inference ─────────────────────────────────────────────────────────

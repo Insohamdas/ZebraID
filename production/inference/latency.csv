@@ -1,0 +1,6 @@
+stage,mean_ms,median_ms,p95_ms,min_ms,max_ms
+preprocessing,6.89,7.0,8.37,3.71,8.73
+forward_pass,104.56,104.64,105.19,102.99,105.29
+l2_normalization,1.27,1.3,2.47,0.35,2.76
+gallery_retrieval,0.21,0.2,0.26,0.14,0.31
+total_end_to_end,112.93,113.19,114.86,108.27,116.32

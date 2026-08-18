@@ -1,0 +1,22 @@
+\begin{table*}[t]
+\centering
+\small
+\caption{\textbf{Final Re-Identification Performance on Held-Out Test Splits.} Comparison of within-population baseline (\textbf{Baseline A}), cross-population generalization gap baseline (\textbf{Baseline X}), and the proposed \textbf{ZebraID} cross-population model under identical leave-one-out evaluation ($\text{split\_seed}=42$, zero data leakage). Multi-seed results are reported as $\text{Mean} \pm \text{Std Dev}$.}
+\label{tab:final_comparison}
+\begin{tabular}{llcccccccc}
+\toprule
+\multirow{2}{*}{\textbf{Method}} & \multirow{2}{*}{\textbf{Training Setup}} & \multicolumn{4}{c}{\textbf{Population A — Plains Zebra ($N=821$)}} & \multicolumn{4}{c}{\textbf{Population B — Grevy's Zebra ($N=130$)}} \\
+\cmidrule(lr){3-6} \cmidrule(lr){7-10}
+& & \textbf{Rank-1 (\%)} & \textbf{Rank-5 (\%)} & \textbf{Rank-10 (\%)} & \textbf{mAP (\%)} & \textbf{Rank-1 (\%)} & \textbf{Rank-5 (\%)} & \textbf{Rank-10 (\%)} & \textbf{mAP (\%)} \\
+\midrule
+\multicolumn{10}{l}{\textit{Primary Model (MegaDescriptor-L-384)}} \\
+Baseline A & Pop A Only & 89.40 & 94.28 & \textbf{96.47} & \textbf{66.84} & 46.92 & 73.08 & 82.31 & 31.77 \\
+Baseline X & Pop A $\rightarrow$ Pop B Gap & 89.40 & 94.28 & \textbf{96.47} & \textbf{66.84} & 46.92 & 73.08 & 82.31 & 31.77 \\
+\textbf{ZebraID (Ours)} & Mixed Pop A + B & \textbf{89.48 $\pm$ 1.11} & 93.99 $\pm$ 0.25 & 95.45 $\pm$ 0.19 & 65.33 $\pm$ 0.53 & \textbf{51.54 $\pm$ 3.08} & \textbf{75.38 $\pm$ 3.53} & \textbf{82.31 $\pm$ 2.77} & \textbf{34.50 $\pm$ 1.51} \\
+\midrule
+\multicolumn{10}{l}{\textit{Backbone Ablation (ResNet-50)}} \\
+ResNet-50 Baseline & Pop A Only & 22.17 & 40.93 & 49.94 & 9.59 & 29.23 & 65.38 & 78.46 & 23.99 \\
+\textbf{ResNet-50 ZebraID} & Mixed Pop A + B & \textbf{24.36} & \textbf{43.48} & \textbf{53.11} & \textbf{10.47} & \textbf{34.62} & 63.08 & 76.15 & \textbf{25.79} \\
+\bottomrule
+\end{tabular}
+\end{table*}

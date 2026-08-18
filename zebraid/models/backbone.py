@@ -113,7 +113,13 @@ class ZebraEmbedder(nn.Module):
         Returns:
             L2-normalized embedding of shape (B, embedding_dim).
         """
-        features = self.backbone(x)          # (B, backbone_out_dim)
+        # Chunked forward pass to prevent OOM on large batches when backbone is frozen
+        chunk_size = 32
+        if x.size(0) > chunk_size and not next(self.backbone.parameters()).requires_grad:
+            features = torch.cat([self.backbone(x_chunk) for x_chunk in x.split(chunk_size)], dim=0)
+        else:
+            features = self.backbone(x)          # (B, backbone_out_dim)
+            
         projected = self.projector(features)  # (B, embedding_dim)
         return F.normalize(projected, p=2, dim=1)  # L2 normalize
 

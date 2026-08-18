@@ -1,0 +1,15 @@
+\begin{table}[h]
+\centering
+\small
+\caption{\textbf{Backbone Architecture Ablation on Held-Out Test Splits.} Comparing standard ImageNet-pretrained ResNet-50 against wildlife-domain MegaDescriptor-L-384 under fixed $\text{split\_seed}=42$.}
+\label{tab:backbone_ablation}
+\begin{tabular}{llcccc}
+\toprule
+\textbf{Model} & \textbf{Training Setup} & \textbf{Pop A R-1 (\%)} & \textbf{Pop A mAP (\%)} & \textbf{Pop B R-1 (\%)} & \textbf{Pop B mAP (\%)} \\
+\midrule
+ResNet-50 Baseline & Pop A Only & 22.17 & 9.59 & 29.23 & 23.99 \\
+ResNet-50 ZebraID & Mixed Pop A + B & 24.36 & 10.47 & 34.62 & 25.79 \\
+\textbf{MegaDescriptor ZebraID (Ours)} & Mixed Pop A + B & \textbf{89.48 $\pm$ 1.11} & \textbf{65.33 $\pm$ 0.53} & \textbf{51.54 $\pm$ 3.08} & \textbf{34.50 $\pm$ 1.51} \\
+\bottomrule
+\end{tabular}
+\end{table}

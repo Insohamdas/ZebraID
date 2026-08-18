@@ -256,7 +256,7 @@ class GrevysDataset(Dataset):
         train_ratio:    float = 0.70,
         val_ratio:      float = 0.15,
         transform:      Optional[Callable] = None,
-        min_images_per_individual: int = 1,
+        min_images_per_individual: int = 2,
         individual_id_offset: int = 0,
     ) -> None:
         super().__init__()
@@ -267,16 +267,23 @@ class GrevysDataset(Dataset):
         self.split     = split
         self.transform = transform
         self.individual_id_offset = individual_id_offset
+        self.min_images_per_individual = min_images_per_individual
 
         # ── Discover individuals from folder structure ────────────────────────
         local_id_to_images: dict[int, list[Path]] = {}
+        all_discovered_ids: list[int] = []
         for folder in sorted(self.root.iterdir()):
             if not folder.is_dir() or not folder.name.isdigit():
                 continue
             local_id = int(folder.name)
+            all_discovered_ids.append(local_id)
             pngs = sorted(folder.glob("*.png"))
             if len(pngs) >= min_images_per_individual:
                 local_id_to_images[local_id] = pngs
+
+        self.total_individuals = len(all_discovered_ids)
+        self.eligible_individuals = len(local_id_to_images)
+        self.excluded_singletons = self.total_individuals - self.eligible_individuals
 
         # ── Stratified individual-level split ────────────────────────────────
         all_local_ids = sorted(local_id_to_images.keys())
@@ -335,11 +342,14 @@ class GrevysDataset(Dataset):
 
     def stats(self) -> dict:
         return {
-            "dataset":       "Labeled Mpala Grevy's Zebra",
-            "split":         self.split,
-            "n_individuals": self.num_individuals,
-            "n_samples":     len(self.samples),
-            "population":    "grevys_zebra (B)",
+            "dataset":              "Labeled Mpala Grevy's Zebra",
+            "split":                self.split,
+            "n_individuals":        self.num_individuals,
+            "n_samples":            len(self.samples),
+            "population":           "grevys_zebra (B)",
+            "total_individuals":    self.total_individuals,
+            "eligible_individuals": self.eligible_individuals,
+            "excluded_singletons":  self.excluded_singletons,
         }
 
 
@@ -353,6 +363,7 @@ def build_datasets(
     split_seed: int = 42,
     train_ratio: float = 0.70,
     val_ratio: float = 0.15,
+    min_images_per_individual: int = 2,
     gzgc_root:   Optional[str | Path] = None,
     grevys_root: Optional[str | Path] = None,
 ) -> tuple["GZGCDataset", "GrevysDataset"]:
@@ -374,7 +385,12 @@ def build_datasets(
     if grevys_root is None:
         grevys_root = _resolve_grevys_root()
 
-    split_kw = dict(split_seed=split_seed, train_ratio=train_ratio, val_ratio=val_ratio)
+    split_kw = dict(
+        split_seed=split_seed,
+        train_ratio=train_ratio,
+        val_ratio=val_ratio,
+        min_images_per_individual=min_images_per_individual,
+    )
 
     ds_a = GZGCDataset(root=gzgc_root, split=split, transform=transform, **split_kw)
 

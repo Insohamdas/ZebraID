@@ -1,0 +1,35 @@
+{
+  "manifest_name": "ZebraID Production Inference Manifest",
+  "version": "1.0.0",
+  "timestamp": "2026-08-17 18:56:49 UTC",
+  "checkpoint": {
+    "path": "production/model/best_model.pt",
+    "sha256": "3321915956649db169da38b8fa9ca1b26e735bcc40d71306ac83009909e88a80",
+    "seed": 44,
+    "best_epoch": 12,
+    "training_commit": "8ba24ef0d3aca48cc394c153fbf05c816332ad65",
+    "release_commit": "f7368c6573115478b49fcfa9e36735913906ea47"
+  },
+  "specifications": {
+    "backbone": "MegaDescriptor-L-384",
+    "embedding_dimension": 512,
+    "l2_normalized": true,
+    "input_resolution": [
+      384,
+      384
+    ],
+    "preprocessing_version": "v1.0 (ImageNet normalized, 0% flips)"
+  },
+  "performance_sla": {
+    "mean_latency_ms": 112.93,
+    "p95_latency_ms": 114.86,
+    "peak_throughput_fps": 8.9,
+    "finite_activation_rate": "100.0%",
+    "nan_inf_rate": "0.0%"
+  },
+  "environment": {
+    "device": "mps",
+    "python": "3.11.7",
+    "pytorch": "2.13.0"
+  }
+}

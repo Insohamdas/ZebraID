@@ -37,6 +37,7 @@ def compute_cmc_map(
     device: torch.device,
     top_k: int = 5,
     batch_size: int = 32,
+    num_workers: int = 2,
     save_examples_dir: str | Path | None = None,
 ) -> dict:
     """
@@ -52,12 +53,13 @@ def compute_cmc_map(
         device:     Torch device.
         top_k:      Rank-k accuracy to compute (default 5).
         batch_size: Batch size for embedding extraction.
+        num_workers: Number of workers for DataLoader.
         save_examples_dir: Optional directory to save visual retrieval examples.
 
     Returns:
-        Dict with keys: 'rank1', 'rank5' (or 'rankk'), 'map'.
+        Dict with keys: 'rank1', 'rank5', 'rank10', 'map', 'n_queries', etc.
     """
-    loader = DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=2)
+    loader = DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers)
 
     all_embeddings: list[np.ndarray] = []
     all_labels: list[int] = []
@@ -73,28 +75,66 @@ def compute_cmc_map(
     embeddings = np.concatenate(all_embeddings, axis=0)  # (N, D)
     labels = np.array(all_labels)                         # (N,)
 
+    # ── Evaluation Safety Check ──────────────────────────────────────────────
+    if not np.isfinite(embeddings).all():
+        nan_count = int(np.isnan(embeddings).sum())
+        inf_count = int(np.isinf(embeddings).sum())
+        raise RuntimeError(
+            f"Evaluation Safety Check Failed: Extracted embeddings contain non-finite values "
+            f"({nan_count} NaNs, {inf_count} Infs out of {embeddings.size} total elements). "
+            f"Model weights or intermediate activations are corrupted."
+        )
+
+    from collections import Counter
+    label_counts = Counter(labels)
+
     N = len(labels)
-    rank1_correct = 0
-    rankk_correct = 0
-    ap_sum = 0.0
+    rank1_correct_all = 0
+    rank5_correct_all = 0
+    rank10_correct_all = 0
+    rankk_correct_all = 0
+    ap_sum_all = 0.0
+
+    rank1_correct_multi = 0
+    rank5_correct_multi = 0
+    rank10_correct_multi = 0
+    rankk_correct_multi = 0
+    ap_sum_multi = 0.0
+    n_queries_multi = 0
 
     for i in range(N):
         query_emb = embeddings[i]         # (D,)
         query_label = labels[i]
+        is_multi = (label_counts[query_label] > 1)
 
         # Cosine similarity against all gallery items (embeddings are L2-normalized)
         sims = embeddings @ query_emb     # (N,)
         sims[i] = -1.0                    # exclude query itself
+
+        if not np.isfinite(sims).all():
+            raise RuntimeError(
+                f"Evaluation Safety Check Failed: Cosine similarity vector for query index {i} "
+                f"contains NaN or Inf values."
+            )
 
         sorted_idx = np.argsort(-sims)    # descending
         sorted_labels = labels[sorted_idx]
 
         # CMC
         matches = sorted_labels == query_label
-        if matches[0]:
-            rank1_correct += 1
-        if matches[:top_k].any():
-            rankk_correct += 1
+        is_r1 = bool(matches[0]) if len(matches) > 0 else False
+        is_r5 = bool(matches[:min(5, len(matches))].any()) if len(matches) > 0 else False
+        is_r10 = bool(matches[:min(10, len(matches))].any()) if len(matches) > 0 else False
+        is_rk = bool(matches[:min(top_k, len(matches))].any()) if len(matches) > 0 else False
+
+        if is_r1:
+            rank1_correct_all += 1
+        if is_r5:
+            rank5_correct_all += 1
+        if is_r10:
+            rank10_correct_all += 1
+        if is_rk:
+            rankk_correct_all += 1
 
         # Average Precision
         match_positions = np.where(matches)[0] + 1  # 1-indexed
@@ -102,7 +142,22 @@ def compute_cmc_map(
             precision_at_k = [
                 (j + 1) / pos for j, pos in enumerate(match_positions)
             ]
-            ap_sum += np.mean(precision_at_k)
+            ap = float(np.mean(precision_at_k))
+        else:
+            ap = 0.0
+        ap_sum_all += ap
+
+        if is_multi:
+            n_queries_multi += 1
+            if is_r1:
+                rank1_correct_multi += 1
+            if is_r5:
+                rank5_correct_multi += 1
+            if is_r10:
+                rank10_correct_multi += 1
+            if is_rk:
+                rankk_correct_multi += 1
+            ap_sum_multi += ap
 
         # Save retrieval examples
         if save_examples_dir is not None and i < 20 and plt is not None:
@@ -114,7 +169,7 @@ def compute_cmc_map(
             # Query image
             q_sample = dataset.samples[i]
             q_img = Image.open(q_sample["file_path"]).convert("RGB")
-            if q_sample["bbox"] is not None:
+            if q_sample.get("bbox") is not None:
                 x, y, w, h = [int(v) for v in q_sample["bbox"]]
                 q_img = q_img.crop((x, y, x + w, y + h))
             
@@ -129,7 +184,7 @@ def compute_cmc_map(
                 ret_sample = dataset.samples[ret_idx]
                 
                 r_img = Image.open(ret_sample["file_path"]).convert("RGB")
-                if ret_sample["bbox"] is not None:
+                if ret_sample.get("bbox") is not None:
                     x, y, w, h = [int(v) for v in ret_sample["bbox"]]
                     r_img = r_img.crop((x, y, x + w, y + h))
                     
@@ -150,11 +205,21 @@ def compute_cmc_map(
             plt.savefig(out_dir / f"{prefix}_query_{i}_id_{query_label}.png", bbox_inches='tight')
             plt.close()
 
+    n_singletons = N - n_queries_multi
+
     return {
-        "rank1":         rank1_correct / N,
-        "rank5":         rankk_correct / N,   # alias; equals rank{top_k} when top_k=5
-        f"rank{top_k}":  rankk_correct / N,
-        "map":           ap_sum / N,
-        "n_queries":     N,
+        "rank1":              rank1_correct_all / N if N > 0 else 0.0,
+        "rank5":              rank5_correct_all / N if N > 0 else 0.0,
+        "rank10":             rank10_correct_all / N if N > 0 else 0.0,
+        f"rank{top_k}":       rankk_correct_all / N if N > 0 else 0.0,
+        "map":                ap_sum_all / N if N > 0 else 0.0,
+        "n_queries":          N,
+        "rank1_multi":        rank1_correct_multi / n_queries_multi if n_queries_multi > 0 else 0.0,
+        "rank5_multi":        rank5_correct_multi / n_queries_multi if n_queries_multi > 0 else 0.0,
+        "rank10_multi":       rank10_correct_multi / n_queries_multi if n_queries_multi > 0 else 0.0,
+        f"rank{top_k}_multi": rankk_correct_multi / n_queries_multi if n_queries_multi > 0 else 0.0,
+        "map_multi":          ap_sum_multi / n_queries_multi if n_queries_multi > 0 else 0.0,
+        "n_queries_multi":    n_queries_multi,
+        "n_singletons":       n_singletons,
     }
 

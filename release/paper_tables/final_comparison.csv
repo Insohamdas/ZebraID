@@ -1,0 +1,6 @@
+Method,Description,Backbone,PopA_Rank1,PopA_Rank5,PopA_Rank10,PopA_mAP,PopB_Rank1,PopB_Rank5,PopB_Rank10,PopB_mAP
+Baseline A,Fine-tuned on Pop A only (Within-Pop Evaluation),MegaDescriptor-L-384,89.40%,94.28%,96.47%,66.84%,46.92%,73.08%,82.31%,31.77%
+Baseline X,Fine-tuned on Pop A only (Cross-Pop Gen Gap),MegaDescriptor-L-384,89.40%,94.28%,96.47%,66.84%,46.92%,73.08%,82.31%,31.77%
+ZebraID,"Mixed A+B Training (Held-Out Test Across Seeds 42, 43, 44)",MegaDescriptor-L-384,89.48 ± 1.11%,93.99 ± 0.25%,95.45 ± 0.19%,65.33 ± 0.53%,51.54 ± 3.08%,75.38 ± 3.53%,82.31 ± 2.77%,34.50 ± 1.51%
+ResNet-50 Baseline,ResNet-50 Backbone Ablation (Pop A Only),ResNet-50,22.17%,40.93%,49.94%,9.59%,29.23%,65.38%,78.46%,23.99%
+ResNet-50 ZebraID,ResNet-50 Backbone Ablation (Mixed A+B),ResNet-50,24.36%,43.48%,53.11%,10.47%,34.62%,63.08%,76.15%,25.79%
