@@ -19,7 +19,10 @@ from typing import Optional
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import timm
+try:
+    import timm
+except ImportError:
+    timm = None
 
 
 # ── Backbone IDs ──────────────────────────────────────────────────────────────
@@ -54,6 +57,8 @@ class ZebraEmbedder(nn.Module):
             # MegaDescriptor is distributed as a timm-compatible model on HuggingFace
             print("Loading MegaDescriptor model...", flush=True)
             try:
+                if timm is None:
+                    raise ImportError("timm module not installed")
                 self.backbone = timm.create_model(
                     MEGADESCRIPTOR_MODEL_ID,
                     pretrained=pretrained,

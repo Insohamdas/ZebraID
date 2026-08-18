@@ -3,531 +3,1663 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ZebraID — AI Biometrics</title>
-  
+  <title>ZebraID — Nature's Barcode, Decoded</title>
+  <meta name="description" content="The open-source AI platform that turns zebra stripe photography into 256-bit Z-Hash biometric codes for instant, privacy-preserving population matching across continents.">
+
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-  <script src="https://unpkg.com/lucide@latest"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <!-- Icons -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="/static/zebraid_favicon.png">
 
   <style>
-    /* ── PREMIUM TOKENS ── */
+    /* ==========================================================================
+       DESIGN SYSTEM — DARK MODE PREMIUM
+       ========================================================================== */
     :root {
-      --bg: #FAFAFA;
-      --surface: #FFFFFF;
-      --primary: #111111;
-      --secondary: #6B7280;
-      --border: #E5E7EB;
-      --success: #10B981;
+      /* Canvas */
+      --canvas: #0a0a0a;
+      --canvas-elevated: #111111;
+      --canvas-overlay: #161616;
       
+      /* Surfaces */
+      --surface-card: rgba(255, 255, 255, 0.03);
+      --surface-card-hover: rgba(255, 255, 255, 0.06);
+      --surface-glass: rgba(255, 255, 255, 0.04);
+      --surface-glass-border: rgba(255, 255, 255, 0.08);
+      
+      /* Accent — Savanna Gold */
+      --accent: #d4a853;
+      --accent-dim: rgba(212, 168, 83, 0.15);
+      --accent-glow: rgba(212, 168, 83, 0.3);
+      --accent-text: #e8c06a;
+      
+      /* Accent 2 — Emerald (success / nature) */
+      --emerald: #34d399;
+      --emerald-dim: rgba(52, 211, 153, 0.12);
+      --emerald-glow: rgba(52, 211, 153, 0.25);
+
+      /* Text */
+      --text-primary: #f5f5f5;
+      --text-secondary: #a3a3a3;
+      --text-muted: #666666;
+      --text-inverse: #0a0a0a;
+      
+      /* Borders */
+      --border: rgba(255, 255, 255, 0.06);
+      --border-strong: rgba(255, 255, 255, 0.12);
+      --border-accent: rgba(212, 168, 83, 0.3);
+      
+      /* Semantic */
+      --success: #22c55e;
+      --error: #ef4444;
+      --warning: #f59e0b;
+      
+      /* Typography */
       --font-display: 'Space Grotesk', sans-serif;
-      --font-body: 'Inter', sans-serif;
-
-      --radius-xl: 32px;
-      --radius-lg: 24px;
-      --radius-md: 16px;
-      --radius-sm: 8px;
-
-      --shadow-soft: 0 8px 32px rgba(0,0,0,0.04);
-      --shadow-hover: 0 16px 48px rgba(0,0,0,0.08);
+      --font-body: 'Inter', -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
+      
+      /* Radius */
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
+      --radius-xl: 24px;
+      --radius-pill: 9999px;
+      
+      /* Shadows */
+      --shadow-sm: 0 2px 8px rgba(0,0,0,0.3);
+      --shadow-md: 0 8px 32px rgba(0,0,0,0.4);
+      --shadow-lg: 0 16px 64px rgba(0,0,0,0.5);
+      --shadow-glow: 0 0 40px rgba(212, 168, 83, 0.15);
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
+    /* ── RESET ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    
     body {
       font-family: var(--font-body);
-      background-color: var(--bg);
-      color: var(--primary);
+      background: var(--canvas);
+      color: var(--text-primary);
       -webkit-font-smoothing: antialiased;
-      line-height: 1.5;
+      -moz-osx-font-smoothing: grayscale;
+      line-height: 1.6;
       overflow-x: hidden;
     }
 
-    /* ── ZEBRA BRANDING TEXTURES ── */
-    .zebra-texture {
-      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1;
-      background-image: repeating-linear-gradient(
-        -45deg,
-        transparent,
-        transparent 15px,
-        rgba(0,0,0,0.015) 15px,
-        rgba(0,0,0,0.015) 30px
-      );
-      mask-image: radial-gradient(circle at center, black 0%, transparent 80%);
-      -webkit-mask-image: radial-gradient(circle at center, black 0%, transparent 80%);
-      pointer-events: none;
-    }
+    a { color: var(--accent-text); text-decoration: none; transition: color 0.2s; }
+    a:hover { color: var(--accent); }
 
-    /* ── VIEW MANAGER ── */
-    .view { display: none; opacity: 0; transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+    /* ── VIEW SYSTEM ── */
+    .view { display: none; opacity: 0; transition: opacity 0.4s ease; }
     .view.active { display: block; opacity: 1; }
     #analysis-view.active { display: flex; }
 
     /* ==========================================================================
-       LANDING PAGE
+       NAVIGATION
        ========================================================================== */
     .nav {
-      position: sticky; top: 0; z-index: 100;
-      background: rgba(250, 250, 250, 0.8); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-      border-bottom: 1px solid rgba(0,0,0,0.05);
-      padding: 16px 40px; display: flex; justify-content: space-between; align-items: center;
+      position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+      height: 72px; padding: 0 48px;
+      display: flex; align-items: center; justify-content: space-between;
+      background: rgba(10, 10, 10, 0.8);
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      transition: background 0.3s;
     }
-    .logo { font-family: var(--font-display); font-weight: 700; font-size: 20px; display: flex; align-items: center; gap: 10px; letter-spacing: -0.5px; }
-    .logo-mark { 
-      width: 24px; height: 24px; background: var(--primary); border-radius: 6px; position: relative; overflow: hidden;
+    .nav-brand {
+      display: flex; align-items: center; gap: 12px;
+      font-family: var(--font-display); font-size: 22px; font-weight: 600;
+      color: var(--text-primary); text-decoration: none; letter-spacing: -0.5px;
     }
-    .logo-mark::after { content:''; position:absolute; inset:0; background: repeating-linear-gradient(45deg, transparent, transparent 3px, #fff 3px, #fff 4.5px); opacity:0.9; }
-
-    .hero { padding: 160px 40px 100px; text-align: center; max-width: 900px; margin: 0 auto; }
-    .hero-badge { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 100px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--secondary); margin-bottom: 32px; box-shadow: var(--shadow-soft); }
-    .hero h1 { font-family: var(--font-display); font-size: 72px; font-weight: 700; letter-spacing: -2.5px; line-height: 1.05; margin-bottom: 24px; }
-    .hero p { font-size: 20px; color: var(--secondary); max-width: 600px; margin: 0 auto 48px; }
-
-    /* Premium Button with Zebra Shimmer */
-    .btn-premium {
-      display: inline-flex; align-items: center; justify-content: center; gap: 12px;
-      padding: 18px 36px; background: var(--primary); color: white;
-      border: none; border-radius: 100px; font-size: 16px; font-weight: 600;
-      cursor: pointer; position: relative; overflow: hidden;
-      transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s;
+    .nav-brand img { height: 36px; width: auto; filter: brightness(0) invert(1); }
+    .nav-links { display: flex; align-items: center; gap: 36px; list-style: none; }
+    .nav-links a {
+      font-size: 14px; font-weight: 500; color: var(--text-secondary);
+      text-decoration: none; transition: color 0.2s; letter-spacing: 0.3px;
     }
-    .btn-premium:hover {
-      transform: scale(1.03); box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+    .nav-links a:hover { color: var(--text-primary); }
+    .nav-cta {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--accent); color: var(--text-inverse);
+      font-family: var(--font-body); font-size: 14px; font-weight: 600;
+      padding: 10px 24px; border-radius: var(--radius-pill);
+      border: none; cursor: pointer; transition: all 0.25s ease;
+      letter-spacing: 0.3px;
     }
-    .btn-premium span, .btn-premium i { position: relative; z-index: 2; transition: transform 0.3s; }
-    .btn-premium:hover i { transform: translateX(4px); }
-    
-    /* Zebra Shimmer */
-    .btn-premium::before {
-      content: ''; position: absolute; top: 0; left: -100%; width: 200%; height: 100%;
-      background: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.15) 10px, rgba(255,255,255,0.15) 20px);
-      z-index: 1; opacity: 0; transition: opacity 0.3s;
+    .nav-cta:hover {
+      background: #e0b565; transform: translateY(-1px);
+      box-shadow: var(--shadow-glow);
     }
-    .btn-premium:hover::before { opacity: 1; animation: zebraShimmer 2s linear infinite; }
-    @keyframes zebraShimmer { 0% { left: -100%; } 100% { left: 0%; } }
-
-    /* Button Loading State */
-    .btn-premium.loading { pointer-events: none; }
-    .btn-premium.loading::before { opacity: 1; animation: zebraShimmer 1s linear infinite; background: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.3) 10px, rgba(255,255,255,0.3) 20px); }
-
-    /* Sections */
-    .section { padding: 100px 40px; max-width: 1200px; margin: 0 auto; }
-    .section-title { font-family: var(--font-display); font-size: 40px; font-weight: 600; letter-spacing: -1.5px; margin-bottom: 48px; text-align: center; }
-    
-    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
-    .stat-card { background: var(--surface); padding: 40px; border-radius: var(--radius-lg); border: 1px solid var(--border); box-shadow: var(--shadow-soft); text-align: center; }
-    .stat-val { font-family: var(--font-display); font-size: 40px; font-weight: 700; margin-bottom: 8px; }
-    .stat-lbl { color: var(--secondary); font-size: 14px; font-weight: 500; }
 
     /* ==========================================================================
-       ANALYSIS PAGE (100vh FULL SCREEN)
+       BUTTONS
+       ========================================================================== */
+    .btn-primary {
+      display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+      background: var(--accent); color: var(--text-inverse);
+      font-family: var(--font-body); font-size: 15px; font-weight: 600;
+      padding: 14px 32px; border-radius: var(--radius-pill);
+      border: none; cursor: pointer; transition: all 0.25s ease;
+      letter-spacing: 0.3px;
+    }
+    .btn-primary:hover {
+      background: #e0b565; transform: translateY(-2px);
+      box-shadow: var(--shadow-glow);
+    }
+    .btn-primary.loading { opacity: 0.7; pointer-events: none; }
+
+    .btn-secondary {
+      display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+      background: transparent; color: var(--text-primary);
+      font-family: var(--font-body); font-size: 15px; font-weight: 500;
+      padding: 13px 31px; border-radius: var(--radius-pill);
+      border: 1px solid var(--border-strong); cursor: pointer;
+      transition: all 0.25s ease;
+    }
+    .btn-secondary:hover {
+      border-color: var(--text-secondary); background: rgba(255,255,255,0.04);
+    }
+
+    .btn-outline {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      background: transparent; color: var(--text-primary);
+      font-family: var(--font-body); font-size: 14px; font-weight: 500;
+      padding: 11px 24px; border-radius: var(--radius-pill);
+      border: 1px solid var(--border-strong); cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .btn-outline:hover { border-color: var(--accent); color: var(--accent-text); }
+
+    /* ==========================================================================
+       BADGE
+       ========================================================================== */
+    .badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-family: var(--font-mono); font-size: 11px; font-weight: 500;
+      letter-spacing: 1.5px; text-transform: uppercase;
+      padding: 6px 14px; border-radius: var(--radius-pill);
+      border: 1px solid var(--border-accent);
+      color: var(--accent-text); background: var(--accent-dim);
+    }
+    .badge-emerald {
+      border-color: rgba(52,211,153,0.3); color: var(--emerald);
+      background: var(--emerald-dim);
+    }
+
+    /* ==========================================================================
+       HERO SECTION
+       ========================================================================== */
+    .hero {
+      position: relative; min-height: 100vh; padding: 140px 48px 80px;
+      display: flex; align-items: center; overflow: hidden;
+    }
+    .hero-bg {
+      position: absolute; inset: 0; z-index: 0;
+    }
+    /* Ambient gradient orbs */
+    .hero-orb {
+      position: absolute; border-radius: 50%;
+      filter: blur(120px); opacity: 0.4; pointer-events: none;
+    }
+    .hero-orb-1 {
+      width: 600px; height: 600px; top: -100px; right: -100px;
+      background: radial-gradient(circle, rgba(212,168,83,0.3) 0%, transparent 70%);
+      animation: float-orb 8s ease-in-out infinite;
+    }
+    .hero-orb-2 {
+      width: 500px; height: 500px; bottom: -50px; left: -100px;
+      background: radial-gradient(circle, rgba(52,211,153,0.15) 0%, transparent 70%);
+      animation: float-orb 10s ease-in-out infinite reverse;
+    }
+    .hero-orb-3 {
+      width: 400px; height: 400px; top: 40%; left: 40%;
+      background: radial-gradient(circle, rgba(168,200,232,0.1) 0%, transparent 70%);
+      animation: float-orb 12s ease-in-out infinite 2s;
+    }
+    /* Grid overlay */
+    .hero-grid {
+      position: absolute; inset: 0; opacity: 0.03;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px);
+      background-size: 80px 80px;
+    }
+
+    @keyframes float-orb {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33% { transform: translate(30px, -20px) scale(1.05); }
+      66% { transform: translate(-20px, 15px) scale(0.95); }
+    }
+
+    .hero-inner {
+      position: relative; z-index: 1;
+      max-width: 1280px; margin: 0 auto; width: 100%;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center;
+    }
+
+    .hero-content { max-width: 560px; }
+    .hero-badge { margin-bottom: 32px; }
+    .hero-title {
+      font-family: var(--font-display); font-size: 64px; font-weight: 700;
+      line-height: 1.08; letter-spacing: -2px; color: var(--text-primary);
+      margin-bottom: 24px;
+    }
+    .hero-title em {
+      font-style: normal;
+      background: linear-gradient(135deg, var(--accent) 0%, #f0d78c 50%, var(--emerald) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-sub {
+      font-size: 18px; line-height: 1.7; color: var(--text-secondary);
+      margin-bottom: 40px; max-width: 480px;
+    }
+    .hero-actions { display: flex; gap: 16px; flex-wrap: wrap; }
+
+    /* ── Hero Visual — Stripe-to-Hash Animation ── */
+    /* ── Hero Visual — Clean Biometric Interface ── */
+    .hero-visual {
+      display: flex; justify-content: center; align-items: center;
+      position: relative;
+    }
+    .stripe-card {
+      width: 530px; border-radius: var(--radius-xl);
+      background: rgba(14, 14, 14, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+      overflow: hidden; position: relative;
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.7);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .stripe-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 32px 80px rgba(0, 0, 0, 0.8), 0 0 30px rgba(212, 168, 83, 0.2);
+    }
+
+    .cv-viewport {
+      position: relative; width: 100%; aspect-ratio: 16 / 9; overflow: hidden;
+      background: #000;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    /* ── HUD Overlays ── */
+    .hud-overlay {
+      position: absolute; top: 12px;
+      background: rgba(4, 7, 10, 0.85);
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(34, 211, 238, 0.15);
+      display: flex; gap: 16px; padding: 8px 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    }
+    .hud-top-left { left: 12px; border-left: 3px solid #22d3ee; border-radius: 0 4px 4px 0; }
+    .hud-top-right { right: 12px; border-right: 3px solid #22d3ee; border-radius: 4px 0 0 4px; }
+    
+    .hud-block { display: flex; flex-direction: column; justify-content: space-between; position: relative; }
+    .hud-block:not(:last-child)::after {
+      content: ''; position: absolute; right: -8px; top: 10%; height: 80%; width: 1px; background: rgba(255,255,255,0.1);
+    }
+    .text-right { text-align: right; }
+    .text-left { text-align: left !important; }
+    .hud-label { font-family: var(--font-mono); font-size: 7px; color: rgba(255,255,255,0.4); letter-spacing: 1.5px; margin-bottom: 2px; }
+    .hud-val { font-family: var(--font-mono); font-size: 10px; color: rgba(255,255,255,0.9); font-weight: 500; letter-spacing: 0.5px; }
+    .text-green { color: #34d399; }
+    .text-cyan { color: #22d3ee; }
+
+    .hud-panel {
+      position: absolute; bottom: 12px;
+      background: rgba(4, 7, 10, 0.85);
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+      padding: 12px; border-radius: 2px;
+      border: 1px solid rgba(34, 211, 238, 0.2);
+    }
+    .hud-panel::after {
+      content: ''; position: absolute; top: -1px; left: -1px; right: -1px; bottom: -1px;
+      background: linear-gradient(to right, #22d3ee 1px, transparent 1px) 0 0,
+                  linear-gradient(to right, #22d3ee 1px, transparent 1px) 0 100%,
+                  linear-gradient(to left, #22d3ee 1px, transparent 1px) 100% 0,
+                  linear-gradient(to left, #22d3ee 1px, transparent 1px) 100% 100%,
+                  linear-gradient(to bottom, #22d3ee 1px, transparent 1px) 0 0,
+                  linear-gradient(to bottom, #22d3ee 1px, transparent 1px) 100% 0,
+                  linear-gradient(to top, #22d3ee 1px, transparent 1px) 0 100%,
+                  linear-gradient(to top, #22d3ee 1px, transparent 1px) 100% 100%;
+      background-repeat: no-repeat; background-size: 8px 8px;
+      pointer-events: none; z-index: 1;
+    }
+    .hud-bottom-left { left: 12px; width: 150px; }
+    .hud-bottom-right { right: 12px; width: 190px; }
+
+    .hud-panel-title {
+      font-family: var(--font-mono); font-size: 8px; color: #22d3ee;
+      letter-spacing: 1.5px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;
+      text-transform: uppercase; border-bottom: 1px solid rgba(34, 211, 238, 0.2); padding-bottom: 4px;
+    }
+    .hud-map-mock {
+      height: 48px; border-radius: 2px;
+      display: flex; align-items: center; justify-content: center; margin-bottom: 8px;
+      border: 1px solid rgba(255,255,255,0.08); position: relative;
+      background-image: radial-gradient(rgba(34, 211, 238, 0.1) 1px, transparent 1px); background-size: 8px 8px;
+    }
+    .hud-panel-footer { font-family: var(--font-mono); font-size: 8px; color: rgba(255,255,255,0.5); letter-spacing: 0.5px; }
+
+    .hud-table { width: 100%; border-collapse: collapse; }
+    .hud-table td { font-family: var(--font-mono); font-size: 9px; color: rgba(255,255,255,0.5); padding: 3px 0; }
+    .hud-table td.text-right { color: rgba(255,255,255,0.9); text-align: right; font-weight: 500; }
+
+    .hud-bounding-box {
+      position: absolute; top: 22%; left: 32%; width: 36%; height: 56%;
+      border: 1px solid rgba(34, 211, 238, 0.4);
+      background: rgba(34, 211, 238, 0.05);
+      pointer-events: none;
+    }
+    .hud-bounding-box::before {
+      content: ''; position: absolute; top: -2px; left: -2px; right: -2px; bottom: -2px;
+      background: linear-gradient(to right, #22d3ee 2px, transparent 2px) 0 0,
+                  linear-gradient(to right, #22d3ee 2px, transparent 2px) 0 100%,
+                  linear-gradient(to left, #22d3ee 2px, transparent 2px) 100% 0,
+                  linear-gradient(to left, #22d3ee 2px, transparent 2px) 100% 100%,
+                  linear-gradient(to bottom, #22d3ee 2px, transparent 2px) 0 0,
+                  linear-gradient(to bottom, #22d3ee 2px, transparent 2px) 100% 0,
+                  linear-gradient(to top, #22d3ee 2px, transparent 2px) 0 100%,
+                  linear-gradient(to top, #22d3ee 2px, transparent 2px) 100% 100%;
+      background-repeat: no-repeat; background-size: 16px 16px;
+    }
+    .hud-bb-label {
+      position: absolute; top: -16px; left: -1px;
+      background: rgba(4,7,10,0.9); border: 1px solid #22d3ee; border-bottom: none;
+      font-family: var(--font-mono); font-size: 8px; color: #22d3ee;
+      padding: 2px 8px; letter-spacing: 1px; white-space: nowrap;
+    }
+    .cv-viewport-img {
+      width: 100%; height: 100%; object-fit: cover;
+      display: block; opacity: 0.98;
+      transition: filter 0.3s ease;
+    }
+
+    .hash-output {
+      padding: 24px;
+      background: transparent;
+    }
+    .hash-label {
+      font-family: var(--font-mono); font-size: 13px; letter-spacing: 2px;
+      color: var(--accent-text); text-transform: uppercase; margin-bottom: 16px;
+      display: flex; align-items: center; justify-content: space-between;
+      font-weight: 500;
+    }
+    .hud-mode-tabs {
+      display: flex; gap: 6px;
+    }
+    .hud-mode-btn {
+      background: transparent; border: 1px solid rgba(255, 255, 255, 0.15);
+      color: var(--text-muted); font-family: var(--font-body); font-size: 12px; font-weight: 500;
+      padding: 4px 14px; border-radius: var(--radius-pill); cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .hud-mode-btn:hover { color: var(--text-primary); border-color: rgba(255, 255, 255, 0.3); }
+    .hud-mode-btn.active {
+      border-color: var(--accent); color: var(--accent-text);
+      background: rgba(212, 168, 83, 0.1);
+    }
+
+    .hash-value {
+      font-family: var(--font-mono); font-size: 14px; color: #34d399;
+      line-height: 1.8; letter-spacing: 1px;
+      background: #050505; padding: 16px 20px; border-radius: var(--radius-md);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      margin-bottom: 16px;
+    }
+    .hash-match {
+      padding: 16px 20px; border-radius: var(--radius-md);
+      background: rgba(52, 211, 153, 0.06); border: 1px solid rgba(52, 211, 153, 0.3);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .hash-match-left { display: flex; align-items: center; gap: 14px; }
+    .hash-match-icon {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: #34d399; display: flex; align-items: center; justify-content: center;
+      color: #050505; flex-shrink: 0;
+    }
+    .hash-match-text { font-size: 15px; font-weight: 600; color: #34d399; letter-spacing: 0.2px; }
+    .hash-match-id { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+    .hash-match-badge {
+      font-family: var(--font-body); font-size: 11px; font-weight: 600;
+      padding: 4px 12px; border-radius: var(--radius-pill);
+      background: transparent; border: 1px solid var(--accent);
+      color: var(--accent-text); letter-spacing: 0.5px;
+    }
+
+    /* Decorative glow behind card */
+    .stripe-card-glow {
+      position: absolute; width: 460px; height: 520px;
+      border-radius: var(--radius-xl);
+      background: radial-gradient(ellipse, var(--accent-glow) 0%, transparent 70%);
+      filter: blur(60px); z-index: -1;
+      animation: glow-pulse 4s ease-in-out infinite;
+    }
+    @keyframes glow-pulse {
+      0%, 100% { opacity: 0.3; transform: scale(1); }
+      50% { opacity: 0.6; transform: scale(1.05); }
+    }
+
+    /* ── Stats Row ── */
+    .hero-stats {
+      position: relative; z-index: 1;
+      max-width: 1280px; margin: 0 auto; padding: 0 48px;
+      margin-top: -20px;
+    }
+    .stats-row {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px;
+      background: var(--border); border-radius: var(--radius-lg); overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .stat-cell {
+      padding: 28px 32px; background: var(--canvas-elevated);
+      text-align: center; transition: background 0.3s;
+    }
+    .stat-cell:hover { background: var(--canvas-overlay); }
+    .stat-val {
+      font-family: var(--font-display); font-size: 32px; font-weight: 700;
+      color: var(--text-primary); letter-spacing: -1px;
+    }
+    .stat-val span { color: var(--accent-text); }
+    .stat-lbl {
+      font-size: 13px; color: var(--text-muted); margin-top: 4px;
+      letter-spacing: 0.5px;
+    }
+
+    /* ==========================================================================
+       SECTIONS — SHARED
+       ========================================================================== */
+    .section {
+      padding: 120px 48px; max-width: 1280px; margin: 0 auto;
+    }
+    .section-header {
+      text-align: center; max-width: 640px; margin: 0 auto 64px;
+    }
+    .section-header .badge { margin-bottom: 20px; }
+    .section-title {
+      font-family: var(--font-display); font-size: 44px; font-weight: 700;
+      letter-spacing: -1.5px; line-height: 1.15; margin-bottom: 16px;
+    }
+    .section-sub {
+      font-size: 17px; color: var(--text-secondary); line-height: 1.7;
+    }
+
+    /* ==========================================================================
+       HOW IT WORKS — PIPELINE
+       ========================================================================== */
+    .pipeline-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px;
+    }
+    .pipeline-step {
+      position: relative; padding: 36px 28px;
+      background: var(--surface-card); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); transition: all 0.3s ease;
+      overflow: hidden;
+    }
+    .pipeline-step::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, var(--accent), transparent);
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .pipeline-step:hover {
+      background: var(--surface-card-hover); border-color: var(--border-strong);
+      transform: translateY(-4px); box-shadow: var(--shadow-md);
+    }
+    .pipeline-step:hover::before { opacity: 1; }
+    
+    .step-number {
+      font-family: var(--font-display); font-size: 48px; font-weight: 700;
+      color: rgba(255,255,255,0.04); position: absolute; top: 12px; right: 16px;
+      line-height: 1;
+    }
+    .step-icon {
+      width: 48px; height: 48px; border-radius: var(--radius-md);
+      background: var(--accent-dim); border: 1px solid var(--border-accent);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 20px; color: var(--accent-text);
+    }
+    .step-title {
+      font-family: var(--font-display); font-size: 20px; font-weight: 600;
+      margin-bottom: 8px; letter-spacing: -0.3px;
+    }
+    .step-desc {
+      font-size: 14px; color: var(--text-secondary); line-height: 1.65;
+    }
+    /* Connector arrows between steps */
+    .pipeline-step:not(:last-child)::after {
+      content: '→'; position: absolute; right: -18px; top: 50%;
+      transform: translateY(-50%); font-size: 20px; color: var(--text-muted);
+      z-index: 2;
+    }
+
+    /* ==========================================================================
+       ARCHITECTURE — FEDERATION
+       ========================================================================== */
+    .arch-grid {
+      display: grid; grid-template-columns: 1fr 1.2fr 1fr; gap: 24px;
+      align-items: stretch;
+    }
+    .shard-card {
+      padding: 32px; border-radius: var(--radius-lg);
+      background: var(--surface-card); border: 1px solid var(--border);
+      display: flex; flex-direction: column; justify-content: space-between;
+      transition: all 0.3s ease;
+    }
+    .shard-card:hover {
+      border-color: var(--border-strong); transform: translateY(-2px);
+    }
+    .shard-card.coordinator {
+      background: linear-gradient(135deg, rgba(212,168,83,0.06) 0%, rgba(52,211,153,0.04) 100%);
+      border-color: var(--border-accent);
+    }
+    .shard-badge {
+      font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+      letter-spacing: 1.5px; text-transform: uppercase;
+      color: var(--accent-text); margin-bottom: 16px;
+    }
+    .shard-title {
+      font-family: var(--font-display); font-size: 22px; font-weight: 600;
+      margin-bottom: 10px; letter-spacing: -0.3px;
+    }
+    .shard-desc {
+      font-size: 14px; color: var(--text-secondary); line-height: 1.65;
+      margin-bottom: 20px; flex: 1;
+    }
+    .shard-port {
+      font-family: var(--font-mono); font-size: 12px; color: var(--text-muted);
+      padding-top: 16px; border-top: 1px solid var(--border);
+    }
+    /* Data flow arrows */
+    .flow-indicator {
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; color: var(--text-muted); gap: 8px; padding: 8px 0;
+    }
+    .flow-line {
+      flex: 1; height: 1px;
+      background: linear-gradient(90deg, var(--border), var(--accent-glow), var(--border));
+    }
+
+    /* ==========================================================================
+       CTA BANNER
+       ========================================================================== */
+    .cta-banner {
+      position: relative; margin: 0 48px; padding: 80px 64px;
+      border-radius: var(--radius-xl);
+      background: linear-gradient(135deg, var(--canvas-elevated) 0%, rgba(212,168,83,0.08) 100%);
+      border: 1px solid var(--border-accent);
+      text-align: center; overflow: hidden;
+    }
+    .cta-banner .cta-orb {
+      position: absolute; border-radius: 50%; filter: blur(100px);
+      pointer-events: none; opacity: 0.3;
+    }
+    .cta-banner .cta-orb-1 {
+      width: 400px; height: 400px; top: -100px; left: 10%;
+      background: var(--accent-glow);
+    }
+    .cta-banner .cta-orb-2 {
+      width: 300px; height: 300px; bottom: -80px; right: 15%;
+      background: var(--emerald-glow);
+    }
+    .cta-title {
+      font-family: var(--font-display); font-size: 40px; font-weight: 700;
+      letter-spacing: -1.5px; margin-bottom: 16px; position: relative; z-index: 1;
+    }
+    .cta-sub {
+      font-size: 17px; color: var(--text-secondary); margin-bottom: 32px;
+      max-width: 520px; margin-left: auto; margin-right: auto;
+      position: relative; z-index: 1;
+    }
+
+    /* ==========================================================================
+       FOOTER
+       ========================================================================== */
+    .footer {
+      padding: 64px 48px 32px; max-width: 1280px; margin: 0 auto;
+      border-top: 1px solid var(--border);
+    }
+    .footer-grid {
+      display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 48px;
+      margin-bottom: 48px;
+    }
+    .footer-brand-text {
+      font-size: 14px; color: var(--text-muted); line-height: 1.7; max-width: 320px;
+      margin-top: 16px;
+    }
+    .footer-col h4 {
+      font-family: var(--font-display); font-size: 14px; font-weight: 600;
+      color: var(--text-primary); margin-bottom: 16px; letter-spacing: 0.5px;
+    }
+    .footer-col ul { list-style: none; }
+    .footer-col li { margin-bottom: 10px; }
+    .footer-col a { font-size: 13px; color: var(--text-muted); }
+    .footer-col a:hover { color: var(--text-secondary); }
+    .footer-bottom {
+      padding-top: 24px; border-top: 1px solid var(--border);
+      font-size: 13px; color: var(--text-muted);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+
+    /* ==========================================================================
+       ANALYSIS WORKSPACE
        ========================================================================== */
     #analysis-view {
-      height: 100vh; overflow: hidden; display: flex; padding: 24px; gap: 24px;
-      background: var(--bg);
+      flex-direction: row; height: 100vh; padding-top: 72px;
     }
-    
     .panel {
-      background: var(--surface); border-radius: var(--radius-lg); border: 1px solid var(--border);
-      box-shadow: var(--shadow-soft); display: flex; flex-direction: column; position: relative;
+      padding: 32px; overflow-y: auto;
     }
-    
-    /* ── LEFT PANEL (45%) ── */
-    .left-panel { flex: 45; padding: 40px; }
-    
-    .header-compact { display: flex; align-items: center; justify-content: space-between; margin-bottom: 40px; }
-    .back-btn { display: flex; align-items: center; gap: 8px; color: var(--secondary); font-weight: 500; font-size: 14px; cursor: pointer; border: none; background: none; transition: 0.2s; }
-    .back-btn:hover { color: var(--primary); transform: translateX(-4px); }
-
-    .upload-container {
-      flex: 1; display: flex; flex-direction: column; justify-content: center;
-      border: 2px dashed var(--border); border-radius: var(--radius-lg);
-      background: #F9FAFB; transition: 0.3s; position: relative; overflow: hidden;
+    .left-panel {
+      width: 420px; min-width: 380px;
+      background: var(--canvas-elevated);
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; justify-content: space-between;
     }
-    .upload-container:hover { border-color: var(--primary); background: #F3F4F6; }
-    /* Subtle zebra background in upload */
-    .upload-container::before {
-      content: ''; position: absolute; inset: 0; opacity: 0.03; pointer-events: none;
-      background: repeating-linear-gradient(-45deg, #000, #000 4px, transparent 4px, transparent 8px);
+    .right-panel {
+      flex: 1; background: var(--canvas);
     }
 
-    .upload-content { text-align: center; padding: 40px; z-index: 2; }
-    .upload-icon { width: 64px; height: 64px; background: white; border-radius: 16px; display: inline-flex; align-items: center; justify-content: center; box-shadow: var(--shadow-soft); margin-bottom: 24px; }
-    .upload-title { font-family: var(--font-display); font-size: 24px; font-weight: 600; margin-bottom: 8px; }
-    .upload-sub { color: var(--secondary); font-size: 14px; margin-bottom: 24px; }
-    .upload-formats { display: flex; justify-content: center; gap: 8px; }
-    .upload-formats span { font-size: 11px; font-weight: 600; padding: 4px 10px; background: white; border: 1px solid var(--border); border-radius: 100px; color: var(--secondary); }
-    #fileInput { display: none; }
-
-    /* Upload Progress / Preview State */
-    #previewWrapper { display: none; position: absolute; inset: 12px; border-radius: var(--radius-md); overflow: hidden; background: #000; }
-    #previewImg { width: 100%; height: 100%; object-fit: cover; opacity: 0.6; }
-    .scan-laser { position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: white; box-shadow: 0 0 20px 2px rgba(255,255,255,0.8); animation: laserScan 2s linear infinite; display: none; }
-    @keyframes laserScan { 0% { top: 0; } 100% { top: 100%; } }
-
-    /* ── RIGHT PANEL (55%) ── */
-    .right-panel { flex: 55; padding: 40px; display: flex; flex-direction: column; }
-    
-    .dashboard-title { font-family: var(--font-display); font-size: 24px; font-weight: 600; margin-bottom: 32px; display: flex; align-items: center; justify-content: space-between; }
-    .status-badge { font-size: 12px; font-weight: 600; padding: 6px 12px; background: #F3F4F6; border-radius: 100px; color: var(--secondary); display: flex; align-items: center; gap: 6px; }
-    .status-dot { width: 8px; height: 8px; background: var(--secondary); border-radius: 50%; }
-    .status-badge.processing .status-dot { background: #3B82F6; animation: pulse 1s infinite; }
-    @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(59,130,246,0.4); } 100% { box-shadow: 0 0 0 10px rgba(59,130,246,0); } }
-
-    /* AI Pipeline */
-    .pipeline { flex: 1; display: flex; flex-direction: column; justify-content: center; padding-left: 20px; position: relative; margin-bottom: 24px; }
-    .pipeline::before { content: ''; position: absolute; top: 24px; bottom: 24px; left: 24px; width: 2px; background: var(--border); }
-    
-    .p-step { display: flex; align-items: center; gap: 24px; padding: 16px 0; opacity: 0.3; transition: all 0.4s; position: relative; }
-    .p-step.active { opacity: 1; transform: translateX(8px); }
-    .p-step.done { opacity: 0.6; }
-    
-    .p-icon { width: 10px; height: 10px; background: white; border: 2px solid var(--border); border-radius: 50%; position: absolute; left: -19px; z-index: 2; transition: 0.4s; }
-    .p-step.active .p-icon { border-color: var(--primary); background: var(--primary); box-shadow: 0 0 0 4px rgba(0,0,0,0.05); }
-    .p-step.done .p-icon { border-color: var(--primary); background: var(--primary); }
-    
-    .p-label { font-family: var(--font-display); font-size: 18px; font-weight: 600; }
-    .p-step.active .p-label { background: linear-gradient(90deg, #111, #666); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-
-    /* Result Card */
-    .result-view { display: none; flex: 1; animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
-    @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-    
-    .r-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; border-bottom: 1px solid var(--border); padding-bottom: 24px; }
-    .r-match-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--success); background: #ECFDF5; padding: 6px 12px; border-radius: 100px; margin-bottom: 12px; }
-    .r-title { font-family: var(--font-display); font-size: 32px; font-weight: 700; letter-spacing: -0.5px; }
-    .r-score { font-family: var(--font-display); font-size: 48px; font-weight: 700; color: var(--primary); line-height: 1; text-align: right; }
-    .r-score-lbl { font-size: 12px; font-weight: 500; color: var(--secondary); text-transform: uppercase; letter-spacing: 1px; }
-
-    .r-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-    .r-item { background: #FAFAFA; padding: 16px; border-radius: var(--radius-sm); border: 1px solid var(--border); }
-    .r-lbl { font-size: 12px; color: var(--secondary); font-weight: 500; margin-bottom: 4px; }
-    .r-val { font-size: 15px; font-weight: 600; color: var(--primary); }
-    
-    /* Similarity Graph Mock */
-    .r-graph { margin-top: 24px; background: #FAFAFA; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 24px; height: 120px; position: relative; overflow: hidden; }
-    .graph-wave { position: absolute; bottom: 0; left: 0; width: 100%; height: 60%; background: linear-gradient(180deg, rgba(17,17,17,0.1) 0%, transparent 100%); border-top: 2px solid var(--primary); }
-
-    /* Execution Console */
-    .console {
-      height: 140px; background: #F9FAFB; border: 1px solid var(--border); border-radius: var(--radius-md);
-      padding: 16px; font-family: 'Space Mono', monospace; font-size: 12px; color: var(--secondary);
-      overflow-y: auto; display: flex; flex-direction: column; gap: 6px;
+    .workspace-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 24px;
     }
-    .c-line { opacity: 0; animation: cFade 0.3s forwards; display: flex; gap: 8px; }
-    .c-time { color: #9CA3AF; }
-    .c-msg { color: var(--primary); font-weight: 500; }
-    @keyframes cFade { to { opacity: 1; } }
+    .back-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 13px; font-weight: 500; color: var(--text-secondary);
+      background: none; border: none; cursor: pointer; padding: 8px 0;
+      transition: color 0.2s;
+    }
+    .back-btn:hover { color: var(--text-primary); }
 
+    /* Drop Zone */
+    .drop-zone {
+      position: relative; border: 2px dashed var(--border-strong);
+      border-radius: var(--radius-lg); padding: 48px 24px;
+      text-align: center; cursor: pointer; transition: all 0.3s;
+      background: var(--surface-card);
+    }
+    .drop-zone:hover, .drop-zone.dragover {
+      border-color: var(--accent); background: var(--accent-dim);
+    }
+    .drop-icon {
+      width: 56px; height: 56px; margin: 0 auto 16px;
+      border-radius: var(--radius-md);
+      background: var(--accent-dim); border: 1px solid var(--border-accent);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--accent-text);
+    }
+    .drop-title {
+      font-family: var(--font-display); font-size: 18px; font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .drop-sub { font-size: 13px; color: var(--text-muted); }
+    .drop-formats {
+      font-family: var(--font-mono); font-size: 11px; color: var(--text-muted);
+      margin-top: 8px; letter-spacing: 0.5px;
+    }
+
+    #previewWrapper {
+      display: none; margin-top: 16px; position: relative;
+      border-radius: var(--radius-md); overflow: hidden;
+    }
+    #previewImg {
+      width: 100%; display: block; border-radius: var(--radius-md);
+    }
+    #scanOverlay {
+      display: none; position: absolute; inset: 0;
+      background: repeating-linear-gradient(
+        0deg, transparent, transparent 4px,
+        rgba(212,168,83,0.03) 4px, rgba(212,168,83,0.03) 8px
+      );
+    }
+    #scanOverlay::after {
+      content: ''; position: absolute; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      box-shadow: 0 0 20px var(--accent-glow);
+      animation: workspace-scan 2s ease-in-out infinite;
+    }
+    @keyframes workspace-scan {
+      0% { top: 0; }
+      100% { top: 100%; }
+    }
+
+    /* Sample presets */
+    .sample-presets {
+      display: flex; gap: 8px; justify-content: center; margin-top: 8px;
+    }
+    .preset-btn {
+      font-size: 12px; font-weight: 500; padding: 6px 14px;
+      border-radius: var(--radius-pill); border: 1px solid var(--border);
+      background: transparent; color: var(--text-secondary); cursor: pointer;
+      transition: all 0.2s;
+    }
+    .preset-btn:hover {
+      border-color: var(--accent); color: var(--accent-text);
+      background: var(--accent-dim);
+    }
+
+    /* Privacy Toggle */
+    .privacy-toggle {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px; border-radius: var(--radius-md);
+      background: var(--surface-card); border: 1px solid var(--border);
+      margin-bottom: 16px;
+    }
+    .toggle-lbl { font-size: 14px; font-weight: 600; }
+    .toggle-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+    /* Right Panel */
+    .panel-title {
+      font-family: var(--font-display); font-size: 22px; font-weight: 600;
+      margin-bottom: 20px; display: flex; align-items: center; gap: 12px;
+      letter-spacing: -0.3px;
+    }
+    .status-badge {
+      font-family: var(--font-mono); font-size: 10px; font-weight: 500;
+      padding: 4px 10px; border-radius: var(--radius-pill);
+      background: var(--surface-card); border: 1px solid var(--border);
+      color: var(--text-muted); letter-spacing: 1px;
+    }
+
+    /* Pipeline Progress */
+    .pipeline-bar {
+      display: flex; gap: 4px; margin-bottom: 24px;
+    }
+    .pipe-step {
+      flex: 1; height: 4px; border-radius: 2px;
+      background: var(--surface-card); transition: background 0.5s;
+    }
+    .pipe-step.active {
+      background: var(--accent);
+      animation: pipe-pulse 1s ease-in-out infinite;
+    }
+    .pipe-step.done { background: var(--emerald); }
+    @keyframes pipe-pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* Result Container */
+    .result-container {
+      display: none; flex-direction: column; gap: 20px;
+      animation: fade-in 0.5s ease;
+    }
+    @keyframes fade-in {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .match-header {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      padding: 24px; border-radius: var(--radius-lg);
+      background: var(--surface-card); border: 1px solid var(--border);
+    }
+    .match-id {
+      font-family: var(--font-display); font-size: 28px; font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+    .match-score {
+      font-family: var(--font-display); font-size: 36px; font-weight: 700;
+      color: var(--emerald);
+    }
+
+    .heatmap-box {
+      padding: 20px; border-radius: var(--radius-lg);
+      background: var(--surface-card); border: 1px solid var(--border);
+    }
+    .heatmap-img {
+      width: 100%; max-height: 200px; object-fit: contain;
+      border-radius: var(--radius-md); margin-top: 8px;
+    }
+
+    .zhash-payload {
+      font-family: var(--font-mono); font-size: 12px; color: var(--emerald);
+      padding: 16px; margin-top: 8px;
+      background: rgba(0,0,0,0.3); border-radius: var(--radius-md);
+      border: 1px solid var(--border); word-break: break-all;
+      line-height: 1.8;
+    }
+
+    .audit-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;
+    }
+    .audit-card {
+      padding: 16px; border-radius: var(--radius-md);
+      background: var(--surface-card); border: 1px solid var(--border);
+    }
+    .audit-val {
+      font-family: var(--font-display); font-size: 20px; font-weight: 700;
+      margin-bottom: 2px;
+    }
+    .audit-lbl { font-size: 12px; color: var(--text-muted); }
+
+    /* Console Log */
+    .console-log {
+      margin-top: 20px; padding: 16px;
+      background: rgba(0,0,0,0.4); border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      max-height: 200px; overflow-y: auto;
+      font-family: var(--font-mono); font-size: 12px;
+    }
+    .log-entry {
+      padding: 3px 0; color: var(--text-muted); line-height: 1.5;
+    }
+    .log-time { color: var(--accent-text); margin-right: 8px; }
+
+    /* Toggle switch */
+    .toggle-switch {
+      width: 44px; height: 24px; border-radius: 12px;
+      background: var(--border-strong); position: relative;
+      cursor: pointer; transition: background 0.3s;
+      appearance: none; -webkit-appearance: none; outline: none;
+    }
+    .toggle-switch:checked { background: var(--accent); }
+    .toggle-switch::before {
+      content: ''; position: absolute; top: 2px; left: 2px;
+      width: 20px; height: 20px; border-radius: 50%;
+      background: white; transition: transform 0.3s;
+    }
+    .toggle-switch:checked::before { transform: translateX(20px); }
+
+    /* ==========================================================================
+       RESPONSIVE
+       ========================================================================== */
+    @media (max-width: 1024px) {
+      .hero-inner { grid-template-columns: 1fr; gap: 48px; }
+      .hero-title { font-size: 48px; }
+      .hero-visual { order: -1; }
+      .stripe-card { width: 320px; height: 400px; }
+      .pipeline-grid { grid-template-columns: repeat(2, 1fr); }
+      .pipeline-step:nth-child(2)::after { display: none; }
+      .arch-grid { grid-template-columns: 1fr; }
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+      .footer-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 768px) {
+      .nav { padding: 0 24px; }
+      .nav-links { display: none; }
+      .hero { padding: 120px 24px 60px; }
+      .section { padding: 80px 24px; }
+      .hero-title { font-size: 36px; letter-spacing: -1px; }
+      .pipeline-grid { grid-template-columns: 1fr; }
+      .pipeline-step::after { display: none !important; }
+      .stats-row { grid-template-columns: 1fr; }
+      .cta-banner { margin: 0 24px; padding: 48px 32px; }
+      .footer { padding: 48px 24px 24px; }
+      .footer-grid { grid-template-columns: 1fr; }
+      .left-panel { width: 100%; min-width: unset; border-right: none; border-bottom: 1px solid var(--border); }
+      #analysis-view.active { flex-direction: column; }
+    }
   </style>
 </head>
 <body>
-  
-  <div class="zebra-texture"></div>
 
-  <!-- =======================================================
-       LANDING PAGE
-       ======================================================= -->
+  <!-- ==========================================================================
+     1. LANDING PAGE VIEW
+     ========================================================================== -->
   <div id="landing-view" class="view active">
+
+    <!-- Navigation -->
     <nav class="nav">
-      <div class="logo">
-        <div class="logo-mark"></div>
-        ZebraID
-      </div>
-      <button class="btn-premium" onclick="openAnalysis()" style="padding: 12px 24px; font-size: 14px;">
-        Upload Sighting <i data-lucide="arrow-right" style="width: 16px;"></i>
+      <a href="#" class="nav-brand" onclick="openLanding(); return false;">
+        <img src="/static/zebraid_logo_perfect.png" alt="ZebraID" onerror="this.style.display='none'">
+      </a>
+      <ul class="nav-links">
+        <li><a href="#how-it-works">How It Works</a></li>
+        <li><a href="#architecture">Architecture</a></li>
+        <li><a href="#" onclick="openAnalysis(); return false;">Live Demo</a></li>
+      </ul>
+      <button class="nav-cta" onclick="openAnalysis()">
+        Identify Sighting <i data-lucide="arrow-right" style="width:16px;"></i>
       </button>
     </nav>
 
-    <main>
-      <section class="hero">
-        <div class="hero-badge"><i data-lucide="scan" style="width:14px; height:14px;"></i> Enterprise Wildlife OS</div>
-        <h1>Every Stripe Has<br>an Identity.</h1>
-        <p>AI-powered biometric identification for zebras using computer vision and deep metric learning.</p>
-        <button class="btn-premium" onclick="openAnalysis()">
-          Upload Sighting <i data-lucide="arrow-right"></i>
-        </button>
-      </section>
+    <!-- ── HERO ── -->
+    <section class="hero">
+      <div class="hero-bg">
+        <div class="hero-orb hero-orb-1"></div>
+        <div class="hero-orb hero-orb-2"></div>
+        <div class="hero-orb hero-orb-3"></div>
+        <div class="hero-grid"></div>
+      </div>
 
-      <section class="section">
-        <h2 class="section-title">Scale & Impact</h2>
-        <div class="stats-grid">
-          <div class="stat-card"><div class="stat-val">45K+</div><div class="stat-lbl">Identified Zebras</div></div>
-          <div class="stat-card"><div class="stat-val">99.8%</div><div class="stat-lbl">Rank-1 Accuracy</div></div>
-          <div class="stat-card"><div class="stat-val">2.8M</div><div class="stat-lbl">Stripe Embeddings</div></div>
-          <div class="stat-card"><div class="stat-val">&lt;250ms</div><div class="stat-lbl">Search Time</div></div>
-        </div>
-      </section>
-      
-      <section class="section" style="padding-top: 0;">
-        <h2 class="section-title">Technology Stack</h2>
-        <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr);">
-          <div class="stat-card" style="text-align:left;">
-            <i data-lucide="cpu" style="margin-bottom:16px;"></i>
-            <h3 style="font-family: var(--font-display); font-size:20px; margin-bottom:8px;">Computer Vision</h3>
-            <p style="color:var(--secondary); font-size:14px;">Isolates flank region of interest with robust YOLO-based bounding.</p>
+      <div class="hero-inner">
+        <!-- Left: Content -->
+        <div class="hero-content">
+          <div class="hero-badge">
+            <span class="badge">
+              <i data-lucide="scan-line" style="width:14px;"></i>
+              Biometric AI for Wildlife
+            </span>
           </div>
-          <div class="stat-card" style="text-align:left;">
-            <i data-lucide="network" style="margin-bottom:16px;"></i>
-            <h3 style="font-family: var(--font-display); font-size:20px; margin-bottom:8px;">Deep Metric Learning</h3>
-            <p style="color:var(--secondary); font-size:14px;">ResNet architectures generate highly dense 512-d feature vectors.</p>
-          </div>
-          <div class="stat-card" style="text-align:left;">
-            <i data-lucide="shield" style="margin-bottom:16px;"></i>
-            <h3 style="font-family: var(--font-display); font-size:20px; margin-bottom:8px;">Privacy Preserving</h3>
-            <p style="color:var(--secondary); font-size:14px;">Zero raw assets transmitted. Only hashed embeddings touch the network.</p>
+          <h1 class="hero-title">
+            Every stripe<br>tells a story.<br><em>We read it.</em>
+          </h1>
+          <p class="hero-sub">
+            ZebraID transforms raw field photography into 256-bit cryptographic identifiers — enabling instant, privacy-preserving zebra re-identification across continents, without ever sharing a single photograph.
+          </p>
+          <div class="hero-actions">
+            <button class="btn-primary" onclick="openAnalysis()">
+              <i data-lucide="sparkles" style="width:18px;"></i> Try Live Demo
+            </button>
+            <button class="btn-secondary" onclick="document.getElementById('how-it-works').scrollIntoView({behavior:'smooth'})">
+              <i data-lucide="play-circle" style="width:18px;"></i> How It Works
+            </button>
           </div>
         </div>
-      </section>
-    </main>
+
+        <!-- Right: Animated Computer Vision Biometric Visual -->
+        <div class="hero-visual">
+          <div class="stripe-card-glow"></div>
+          
+          <div class="stripe-card">
+            <div class="cv-viewport">
+              <img src="/static/hero_biometric_scan.jpg" alt="ZebraID Biometric Computer Vision Scanner" class="cv-viewport-img" id="heroCvImg">
+              
+              <!-- HUD Overlays -->
+              <div class="hud-overlay hud-top-left" id="hudTopLeft">
+                <div class="hud-block"><span class="hud-label">STATUS</span><span class="hud-val text-green">ACTIVE</span></div>
+                <div class="hud-block"><span class="hud-label">UNIT</span><span class="hud-val">CV-WLF-73</span></div>
+                <div class="hud-block"><span class="hud-label">DATE</span><span class="hud-val">25 AUG 2026</span></div>
+                <div class="hud-block"><span class="hud-label">TIME</span><span class="hud-val">14:32:01</span></div>
+              </div>
+
+              <div class="hud-overlay hud-top-right" id="hudTopRight">
+                <div class="hud-block text-left">
+                  <span class="hud-label">SYSTEM STATUS</span>
+                  <span class="hud-val"><span class="text-green">ONLINE</span> | CONN: STABLE</span>
+                </div>
+                <div class="hud-block text-right">
+                  <span class="hud-label">SAT</span><span class="hud-val">5</span>
+                </div>
+                <div class="hud-block text-right">
+                  <span class="hud-label">BAT</span><span class="hud-val text-green">91%</span>
+                </div>
+              </div>
+
+              <div class="hud-bounding-box" id="hudBox">
+                <div class="hud-bb-label">ID: AEQ-ZBR-049 | CONF: 99.4%</div>
+              </div>
+
+              <div class="hud-panel hud-bottom-left" id="hudBotLeft">
+                <div class="hud-panel-title">MAP <i data-lucide="map-pin" style="width:10px;"></i></div>
+                <div class="hud-map-mock">
+                  <i data-lucide="globe-2" style="width: 24px; height: 24px; color: rgba(34, 211, 238, 0.4);"></i>
+                </div>
+                <div class="hud-panel-footer">GPS 08.5714S, 36.3501E</div>
+              </div>
+
+              <div class="hud-panel hud-bottom-right" id="hudBotRight">
+                <div class="hud-panel-title">BIOMETRIC ANALYSIS</div>
+                <table class="hud-table">
+                  <tr><td>Subject:</td><td class="text-right">ZEBRA-049</td></tr>
+                  <tr><td>Sex:</td><td class="text-right">Female</td></tr>
+                  <tr><td>Stripe ID:</td><td class="text-right">Z049-M2</td></tr>
+                  <tr><td>Confidence:</td><td class="text-right">99.7%</td></tr>
+                  <tr><td>Location:</td><td class="text-right">08°34'S, 36°21'E</td></tr>
+                </table>
+              </div>
+            </div>
+            
+            <div class="hash-output">
+              <div class="hash-label">
+                <span id="heroHashLabel">Z-HASH BIOMETRIC CODE</span>
+                <div class="hud-mode-tabs">
+                  <button class="hud-mode-btn active" onclick="switchHeroMode('scan', this)">Scan</button>
+                  <button class="hud-mode-btn" onclick="switchHeroMode('mesh', this)">Mesh</button>
+                  <button class="hud-mode-btn" onclick="switchHeroMode('privacy', this)">Shield</button>
+                </div>
+              </div>
+              <div class="hash-value" id="heroHash">
+                10d7 810d e8a2 7942 e1aa c4f2 6d1d c333<br>
+                81cb 5a56 294d e942 fd68 abb1 8e78 7ad3
+              </div>
+              <div class="hash-match">
+                <div class="hash-match-left">
+                  <div class="hash-match-icon">
+                    <i data-lucide="check" style="width:16px; stroke-width: 3;"></i>
+                  </div>
+                  <div>
+                    <div class="hash-match-text" id="heroMatchText">Individual Z-049 · Match 99.7%</div>
+                    <div class="hash-match-id" id="heroMatchSub">Plains Zebra (Equus quagga) · Org A Shard</div>
+                  </div>
+                </div>
+                <div class="hash-match-badge" id="heroMatchBadge">VERIFIED</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── STATS ROW ── -->
+    <div class="hero-stats">
+      <div class="stats-row">
+        <div class="stat-cell">
+          <div class="stat-val">99.4<span>%</span></div>
+          <div class="stat-lbl">mAP@1 Accuracy</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-val">256<span>b</span></div>
+          <div class="stat-lbl">Z-Hash Biometric Code</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-val">&lt;5<span>ms</span></div>
+          <div class="stat-lbl">Federated Query Latency</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-val">0<span>%</span></div>
+          <div class="stat-lbl">Raw Data Leakage</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── HOW IT WORKS ── -->
+    <section class="section" id="how-it-works">
+      <div class="section-header">
+        <span class="badge">
+          <i data-lucide="layers" style="width:14px;"></i> Pipeline
+        </span>
+        <h2 class="section-title">From field photo to unique identity in milliseconds</h2>
+        <p class="section-sub">
+          A single photograph passes through four stages of AI processing — each designed for accuracy, speed, and zero data leakage.
+        </p>
+      </div>
+
+      <div class="pipeline-grid">
+        <div class="pipeline-step">
+          <div class="step-number">01</div>
+          <div class="step-icon"><i data-lucide="camera" style="width:24px;"></i></div>
+          <div class="step-title">Capture</div>
+          <div class="step-desc">Upload field photography. Our detector locates every zebra in the frame with bounding box precision.</div>
+        </div>
+        <div class="pipeline-step">
+          <div class="step-number">02</div>
+          <div class="step-icon"><i data-lucide="scan-eye" style="width:24px;"></i></div>
+          <div class="step-title">Detect & Classify</div>
+          <div class="step-desc">Species classifier distinguishes Plains from Grevy's zebras. Stripe region of interest is isolated for embedding.</div>
+        </div>
+        <div class="pipeline-step">
+          <div class="step-number">03</div>
+          <div class="step-icon"><i data-lucide="dna" style="width:24px;"></i></div>
+          <div class="step-title">Encode</div>
+          <div class="step-desc">MegaDescriptor backbone extracts a 512-d embedding, then PCA-compressed into a 256-bit Z-Hash binary code.</div>
+        </div>
+        <div class="pipeline-step">
+          <div class="step-number">04</div>
+          <div class="step-icon"><i data-lucide="shield-check" style="width:24px;"></i></div>
+          <div class="step-title">Match</div>
+          <div class="step-desc">Z-Hash is routed to federated FAISS shards. Only the 32-byte hash travels — never the original photograph.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── FEDERATED ARCHITECTURE ── -->
+    <section class="section" id="architecture">
+      <div class="section-header">
+        <span class="badge">
+          <i data-lucide="network" style="width:14px;"></i> Federation
+        </span>
+        <h2 class="section-title">Privacy-preserving cross-organization matching</h2>
+        <p class="section-sub">
+          Each conservation organization maintains sovereignty over their data. Only anonymized Z-Hash codes cross organizational boundaries.
+        </p>
+      </div>
+
+      <div class="arch-grid">
+        <div class="shard-card">
+          <div>
+            <div class="shard-badge">Shard A</div>
+            <div class="shard-title">Plains Zebra Index</div>
+            <div class="shard-desc">
+              Hosted by Org A (e.g., Kenya Wildlife Service). Manages a local FAISS index for <em>Equus quagga</em> sightings with zero raw data export.
+            </div>
+          </div>
+          <div class="shard-port">
+            <i data-lucide="server" style="width:12px; vertical-align: -2px; margin-right: 4px;"></i>
+            localhost:8001 · Shard Service
+          </div>
+        </div>
+
+        <div class="shard-card coordinator">
+          <div>
+            <div class="shard-badge" style="color: var(--emerald);">Coordinator</div>
+            <div class="shard-title">Z-Hash Coordinator Hub</div>
+            <div class="shard-desc">
+              Routes anonymized 32-byte Z-Hash payloads between research shards. Never accesses original photography, GPS coordinates, or sensitive metadata.
+            </div>
+          </div>
+          <div class="shard-port">
+            <i data-lucide="radio-tower" style="width:12px; vertical-align: -2px; margin-right: 4px;"></i>
+            localhost:8000 · Coordinator
+          </div>
+        </div>
+
+        <div class="shard-card">
+          <div>
+            <div class="shard-badge">Shard B</div>
+            <div class="shard-title">Grevy's Zebra Index</div>
+            <div class="shard-desc">
+              Hosted by Org B (e.g., Grevy's Zebra Trust). Manages endangered <em>Equus grevyi</em> population index with end-to-end audit trails.
+            </div>
+          </div>
+          <div class="shard-port">
+            <i data-lucide="server" style="width:12px; vertical-align: -2px; margin-right: 4px;"></i>
+            localhost:8002 · Shard Service
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── CTA BANNER ── -->
+    <section style="padding: 40px 0 120px;">
+      <div class="cta-banner">
+        <div class="cta-orb cta-orb-1"></div>
+        <div class="cta-orb cta-orb-2"></div>
+        <h2 class="cta-title">Ready to identify?</h2>
+        <p class="cta-sub">
+          Upload field imagery to trigger stripe detection, feature extraction, Z-Hash generation, and federated cross-match search.
+        </p>
+        <button class="btn-primary" onclick="openAnalysis()" style="position:relative; z-index:1;">
+          Open Analysis Workspace <i data-lucide="arrow-right" style="width:16px;"></i>
+        </button>
+      </div>
+    </section>
+
+    <!-- ── FOOTER ── -->
+    <footer class="footer">
+      <div class="footer-grid">
+        <div>
+          <a href="#" class="nav-brand" onclick="return false;" style="font-size: 20px; margin-bottom: 8px; display: inline-flex;">
+            <img src="/static/zebraid_logo_perfect.png" alt="ZebraID" style="height: 30px; filter: brightness(0) invert(1);" onerror="this.style.display='none'">
+          </a>
+          <p class="footer-brand-text">
+            Stripe-based individual zebra recognition at continental scale. Built with MegaDescriptor backbones, Z-Hash PCA compression, and FastAPI federation.
+          </p>
+        </div>
+        <div class="footer-col">
+          <h4>Architecture</h4>
+          <ul>
+            <li><a href="#">Z-Hash Encoder</a></li>
+            <li><a href="#">MegaDescriptor</a></li>
+            <li><a href="#">FAISS Indexing</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Datasets</h4>
+          <ul>
+            <li><a href="#">GZGC Benchmark</a></li>
+            <li><a href="#">IBEIS Plains Shard</a></li>
+            <li><a href="#">Cross-Pop Sampler</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Documentation</h4>
+          <ul>
+            <li><a href="#">API Specification</a></li>
+            <li><a href="#">Federation Audit</a></li>
+            <li><a href="#">Research Paper</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2025 ZebraID · Open Source Biometric Framework</span>
+        <span>Built with 🦓 for conservation</span>
+      </div>
+    </footer>
   </div>
 
-  <!-- =======================================================
-       ANALYSIS PAGE (100vh)
-       ======================================================= -->
+  <!-- ==========================================================================
+     2. ANALYSIS WORKSPACE VIEW
+     ========================================================================== -->
   <div id="analysis-view" class="view">
     
-    <!-- LEFT PANEL -->
+    <!-- Navigation (sticky in workspace) -->
+    <nav class="nav" style="position: fixed;">
+      <a href="#" class="nav-brand" onclick="openLanding(); return false;">
+        <img src="/static/zebraid_logo_perfect.png" alt="ZebraID" style="height: 30px; filter: brightness(0) invert(1);" onerror="this.style.display='none'">
+      </a>
+      <div class="badge badge-emerald" id="statusBadge">AWAITING INPUT</div>
+      <button class="btn-outline" onclick="openLanding()">
+        <i data-lucide="arrow-left" style="width:14px;"></i> Back
+      </button>
+    </nav>
+
+    <!-- LEFT PANEL: Upload & Controls -->
     <div class="panel left-panel">
-      <div class="header-compact">
-        <button class="back-btn" onclick="openLanding()"><i data-lucide="arrow-left" style="width:16px;"></i> Back to Platform</button>
-        <div class="logo">
-          <div class="logo-mark"></div>ZebraID
+      <div>
+        <div class="workspace-header">
+          <span class="badge">
+            <i data-lucide="cpu" style="width:12px;"></i> Analytics Engine
+          </span>
+        </div>
+
+        <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+          <div class="drop-icon"><i data-lucide="image-plus" style="width:24px;"></i></div>
+          <div class="drop-title">Upload Zebra Sighting</div>
+          <div class="drop-sub">Drag field photo here or click to browse</div>
+          <div class="drop-formats">JPEG · PNG · WEBP · Max 20MB</div>
+
+          <div id="previewWrapper">
+            <img id="previewImg" src="" alt="Sighting Preview">
+            <div class="scan-overlay" id="scanOverlay"></div>
+          </div>
+          <input type="file" id="fileInput" accept="image/*" style="display:none;">
+        </div>
+
+        <div style="margin-top: 12px; text-align: center;">
+          <span style="font-size: 12px; color: var(--text-muted);">Or test with sample presets:</span>
+          <div class="sample-presets">
+            <button class="preset-btn" onclick="loadSamplePreset('plains')">Plains Sample</button>
+            <button class="preset-btn" onclick="loadSamplePreset('grevy')">Grevy's Sample</button>
+          </div>
         </div>
       </div>
 
-      <div class="upload-container" id="dropZone" onclick="document.getElementById('fileInput').click()">
-        <div class="upload-content">
-          <div class="upload-icon"><i data-lucide="image-plus" style="width:28px;"></i></div>
-          <div class="upload-title">Drop Zebra Photo</div>
-          <div class="upload-sub">or click to browse files</div>
-          <div class="upload-formats">
-            <span>JPG</span><span>PNG</span><span>HEIC</span>
+      <div>
+        <div class="privacy-toggle">
+          <div>
+            <div class="toggle-lbl">Federated Cross-Match</div>
+            <div class="toggle-sub">Query remote Org B shard via Z-Hash</div>
           </div>
+          <input type="checkbox" id="queryOrgB" checked class="toggle-switch">
         </div>
-        
-        <div id="previewWrapper">
-          <img id="previewImg" src="" alt="Sighting Preview">
-          <div class="scan-laser" id="scanLaser"></div>
-        </div>
-        <input type="file" id="fileInput" accept="image/*">
-      </div>
-      
-      <div style="margin-top:24px; text-align:center;">
-        <button class="btn-premium" style="width:100%;" id="uploadDemoBtn" onclick="document.getElementById('fileInput').click()">
-          Select Sighting Image
+
+        <button class="btn-primary" style="width:100%; height:48px;" id="runAnalysisBtn" onclick="executeAnalysis()">
+          <i data-lucide="sparkles" style="width:16px;"></i> Execute Biometric Match
         </button>
       </div>
     </div>
 
-    <!-- RIGHT PANEL -->
+    <!-- RIGHT PANEL: Results -->
     <div class="panel right-panel">
-      <div class="dashboard-title">
-        Analysis Engine
-        <div class="status-badge" id="engineStatus">
-          <div class="status-dot"></div> Awaiting Input
-        </div>
+      <div class="panel-title">
+        Biometric Intelligence
       </div>
 
-      <!-- Pipeline View -->
-      <div class="pipeline" id="pipelineView">
-        <div class="p-step" id="p-upload"><div class="p-icon"></div><div class="p-label">Image Upload</div></div>
-        <div class="p-step" id="p-detect"><div class="p-icon"></div><div class="p-label">Stripe Detection</div></div>
-        <div class="p-step" id="p-extract"><div class="p-icon"></div><div class="p-label">Feature Extraction</div></div>
-        <div class="p-step" id="p-embed"><div class="p-icon"></div><div class="p-label">Deep Embedding</div></div>
-        <div class="p-step" id="p-search"><div class="p-icon"></div><div class="p-label">Vector Search</div></div>
-        <div class="p-step" id="p-match"><div class="p-icon"></div><div class="p-label">Identity Match</div></div>
+      <!-- Pipeline Progress -->
+      <div class="pipeline-bar">
+        <div class="pipe-step" id="p-step-1" title="Upload"></div>
+        <div class="pipe-step" id="p-step-2" title="Detection"></div>
+        <div class="pipe-step" id="p-step-3" title="Embedding"></div>
+        <div class="pipe-step" id="p-step-4" title="Z-Hash"></div>
+        <div class="pipe-step" id="p-step-5" title="Match"></div>
       </div>
 
-      <!-- Result View -->
-      <div class="result-view" id="resultView">
-        <div class="r-header">
+      <!-- Result Container -->
+      <div id="resultContainer" class="result-container">
+        
+        <!-- Match Header -->
+        <div class="match-header">
           <div>
-            <div class="r-match-badge"><i data-lucide="check-circle" style="width:14px;"></i> Verified Match</div>
-            <div class="r-title" id="resTitle">Grevy's Zebra #042</div>
+            <div class="badge badge-emerald" style="margin-bottom: 10px;" id="resMatchBucket">STRONG MATCH</div>
+            <div class="match-id" id="resIndivId">IBEIS_PZ_1594</div>
+            <div style="font-size: 14px; color: var(--text-secondary); margin-top: 4px;" id="resSpecies">Equus quagga (Plains Zebra)</div>
           </div>
-          <div>
-            <div class="r-score" id="resScore">99.8%</div>
-            <div class="r-score-lbl">Confidence</div>
+          <div style="text-align: right;">
+            <div class="match-score" id="resScore">96%</div>
+            <div style="font-size: 12px; color: var(--text-muted);">Cosine Similarity</div>
           </div>
         </div>
 
-        <div class="r-grid">
-          <div class="r-item"><div class="r-lbl">Known Since</div><div class="r-val" id="resYear">2021</div></div>
-          <div class="r-item"><div class="r-lbl">Previous Sightings</div><div class="r-val" id="resSightings">28</div></div>
-          <div class="r-item"><div class="r-lbl">Location</div><div class="r-val" id="resLocation">Kenya</div></div>
-          <div class="r-item"><div class="r-lbl">Population Cluster</div><div class="r-val" id="resCluster">North Reserve</div></div>
-          <div class="r-item"><div class="r-lbl">Research Org</div><div class="r-val" id="resOrg">KWS</div></div>
-          <div class="r-item"><div class="r-lbl">System ID</div><div class="r-val" id="resId">IBEIS_GZ_042</div></div>
+        <!-- Stripe Heatmap -->
+        <div class="heatmap-box">
+          <div style="font-size: 13px; font-weight: 600; color: var(--text-primary);">
+            <i data-lucide="flame" style="width:14px; vertical-align: -2px; margin-right: 4px; color: var(--accent);"></i>
+            Stripe Feature Activation Overlay
+          </div>
+          <img id="heatmapImg" class="heatmap-img" src="" alt="Stripe Heatmap">
         </div>
 
-        <div class="r-graph">
-          <div style="font-size: 12px; font-weight:600; color:var(--secondary); text-transform:uppercase;">Vector Similarity Heatmap</div>
-          <div class="graph-wave"></div>
+        <!-- Z-Hash Payload -->
+        <div>
+          <div style="font-size: 13px; font-weight: 600; color: var(--text-primary);">
+            <i data-lucide="lock" style="width:14px; vertical-align: -2px; margin-right: 4px; color: var(--accent);"></i>
+            Z-Hash Anonymized Payload (32-byte Binary Code)
+          </div>
+          <div class="zhash-payload" id="zhashHex">
+            e4a91b8f3c7d2e0f4a8b9c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f
+          </div>
         </div>
+
+        <!-- Audit Grid -->
+        <div class="audit-grid">
+          <div class="audit-card">
+            <div class="audit-val" id="auditLatency">4.2 ms</div>
+            <div class="audit-lbl">Pipeline Latency</div>
+          </div>
+          <div class="audit-card">
+            <div class="audit-val" id="auditBytes">32 Bytes</div>
+            <div class="audit-lbl">Payload Transmitted</div>
+          </div>
+          <div class="audit-card">
+            <div class="audit-val">0%</div>
+            <div class="audit-lbl">Image Leakage</div>
+          </div>
+          <div class="audit-card">
+            <div class="audit-val" id="auditShard">Org A (Plains)</div>
+            <div class="audit-lbl">Matched Shard</div>
+          </div>
+        </div>
+
+        <!-- Report Export -->
+        <button class="btn-outline" style="width:100%; margin-top: 4px;" onclick="generatePdfReport()">
+          <i data-lucide="file-text" style="width:14px;"></i> Export Sighting Report (PDF)
+        </button>
       </div>
 
-      <!-- Execution Console -->
-      <div class="console" id="console">
-        <div class="c-line"><span class="c-time">[SYS]</span><span class="c-msg">ONNX Runtime initialized. Waiting for task...</span></div>
+      <!-- Console Log -->
+      <div class="console-log" id="consoleLog">
+        <div class="log-entry"><span class="log-time">[SYS]</span>ZebraID Biometric Engine initialized. Awaiting image input.</div>
       </div>
     </div>
-    
   </div>
 
+  <!-- ==========================================================================
+     JAVASCRIPT
+     ========================================================================== -->
   <script>
+    // Initialize icons
     lucide.createIcons();
 
+    // DOM refs
     const landingView = document.getElementById('landing-view');
     const analysisView = document.getElementById('analysis-view');
-    
-    function openAnalysis() {
-      landingView.classList.remove('active');
-      setTimeout(() => {
-        analysisView.classList.add('active');
-      }, 300);
-    }
-    
-    function openLanding() {
-      analysisView.classList.remove('active');
-      setTimeout(() => {
-        landingView.classList.add('active');
-      }, 300);
-    }
-
-    // Drag & Drop
     const dropZone = document.getElementById('dropZone');
     const fileInput = document.getElementById('fileInput');
     const previewWrapper = document.getElementById('previewWrapper');
     const previewImg = document.getElementById('previewImg');
-    const scanLaser = document.getElementById('scanLaser');
-    const pipelineView = document.getElementById('pipelineView');
-    const resultView = document.getElementById('resultView');
-    const consoleBox = document.getElementById('console');
-    const engineStatus = document.getElementById('engineStatus');
-    const uploadDemoBtn = document.getElementById('uploadDemoBtn');
+    const scanOverlay = document.getElementById('scanOverlay');
+    const runAnalysisBtn = document.getElementById('runAnalysisBtn');
+    const resultContainer = document.getElementById('resultContainer');
+    const consoleLog = document.getElementById('consoleLog');
+    const statusBadge = document.getElementById('statusBadge');
 
-    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.style.borderColor = '#111'; });
-    dropZone.addEventListener('dragleave', () => { dropZone.style.borderColor = '#E5E7EB'; });
-    dropZone.addEventListener('drop', e => {
-      e.preventDefault(); dropZone.style.borderColor = '#E5E7EB';
-      if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
-    });
-    fileInput.addEventListener('change', e => {
-      if (e.target.files[0]) handleFile(e.target.files[0]);
-    });
+    let selectedFile = null;
 
-    function logConsole(msg) {
-      const line = document.createElement('div');
-      line.className = 'c-line';
-      const time = new Date().toISOString().split('T')[1].slice(0,8);
-      line.innerHTML = `<span class="c-time">[${time}]</span><span class="c-msg">${msg}</span>`;
-      consoleBox.appendChild(line);
-      consoleBox.scrollTop = consoleBox.scrollHeight;
+    // ── View Management ──
+    function openAnalysis() {
+      landingView.classList.remove('active');
+      setTimeout(() => { analysisView.classList.add('active'); lucide.createIcons(); }, 200);
+    }
+    function openLanding() {
+      analysisView.classList.remove('active');
+      setTimeout(() => { landingView.classList.add('active'); lucide.createIcons(); }, 200);
     }
 
-    const steps = ['upload', 'detect', 'extract', 'embed', 'search', 'match'];
+    // ── Console Logger ──
+    function logConsole(msg) {
+      const entry = document.createElement('div');
+      entry.className = 'log-entry';
+      const time = new Date().toISOString().split('T')[1].slice(0, 8);
+      entry.innerHTML = `<span class="log-time">[${time}]</span>${msg}`;
+      consoleLog.appendChild(entry);
+      consoleLog.scrollTop = consoleLog.scrollHeight;
+    }
 
-    async function handleFile(file) {
-      // Setup UI for processing
-      uploadDemoBtn.classList.add('loading');
-      uploadDemoBtn.innerHTML = 'Processing Sighting...';
-      engineStatus.classList.add('processing');
-      engineStatus.innerHTML = '<div class="status-dot"></div> Executing Pipeline';
+    // ── Drag & Drop ──
+    dropZone.addEventListener('dragover', e => {
+      e.preventDefault(); dropZone.classList.add('dragover');
+    });
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.classList.remove('dragover');
+    });
+    dropZone.addEventListener('drop', e => {
+      e.preventDefault(); dropZone.classList.remove('dragover');
+      if (e.dataTransfer.files[0]) handleFileSelection(e.dataTransfer.files[0]);
+    });
+    fileInput.addEventListener('change', e => {
+      if (e.target.files[0]) handleFileSelection(e.target.files[0]);
+    });
 
+    function handleFileSelection(file) {
+      selectedFile = file;
       previewWrapper.style.display = 'block';
-      scanLaser.style.display = 'block';
-      
       const reader = new FileReader();
       reader.onload = e => { previewImg.src = e.target.result; };
       reader.readAsDataURL(file);
+      logConsole(`Loaded image: ${file.name} (${Math.round(file.size / 1024)} KB)`);
+    }
 
-      pipelineView.style.display = 'flex';
-      resultView.style.display = 'none';
-      
-      // Reset pipeline classes
-      steps.forEach(s => document.getElementById('p-'+s).className = 'p-step');
-      consoleBox.innerHTML = '';
-      logConsole('Task received. Starting pipeline...');
+    // ── Sample Presets ──
+    function loadSamplePreset(type) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 384; canvas.height = 384;
+      const ctx = canvas.getContext('2d');
 
+      // Background
+      const grad = ctx.createLinearGradient(0, 0, 384, 384);
+      grad.addColorStop(0, type === 'grevy' ? '#c4a265' : '#b8956a');
+      grad.addColorStop(1, type === 'grevy' ? '#8b7355' : '#7a6340');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 384, 384);
+
+      // Stripes
+      ctx.fillStyle = type === 'grevy' ? '#1a1a1a' : '#0d0d0d';
+      for (let i = 0; i < 14; i++) {
+        ctx.beginPath();
+        const w = type === 'grevy' ? 8 : 16;
+        ctx.moveTo(i * 30 + 10, 0);
+        ctx.quadraticCurveTo(i * 30 + (type === 'grevy' ? 14 : 30), 192, i * 30 + 10, 384);
+        ctx.lineTo(i * 30 + 10 + w, 384);
+        ctx.quadraticCurveTo(i * 30 + (type === 'grevy' ? 14 : 30) + w, 192, i * 30 + 10 + w, 0);
+        ctx.fill();
+      }
+
+      canvas.toBlob(blob => {
+        const file = new File([blob], `${type}_zebra_sample.jpg`, { type: 'image/jpeg' });
+        handleFileSelection(file);
+      });
+    }
+
+    // ── Pipeline Steps ──
+    function setPipeStep(step) {
+      for (let i = 1; i <= 5; i++) {
+        const el = document.getElementById(`p-step-${i}`);
+        if (i < step) el.className = 'pipe-step done';
+        else if (i === step) el.className = 'pipe-step active';
+        else el.className = 'pipe-step';
+      }
+    }
+
+    // ── Execute Analysis ──
+    async function executeAnalysis() {
+      if (!selectedFile) {
+        alert("Please select or drop a zebra sighting photo first.");
+        return;
+      }
+
+      runAnalysisBtn.classList.add('loading');
+      runAnalysisBtn.innerHTML = '<i data-lucide="loader-2" style="width:16px;" class="spin"></i> Analyzing Stripes...';
+      lucide.createIcons();
+      scanOverlay.style.display = 'block';
+      statusBadge.textContent = 'EXECUTING';
+      statusBadge.className = 'badge';
+      resultContainer.style.display = 'none';
+
+      const queryOrgB = document.getElementById('queryOrgB').checked;
       const formData = new FormData();
-      formData.append('file', file);
-      formData.append('query_org_b', 'false');
+      formData.append('file', selectedFile);
+      formData.append('query_org_b', queryOrgB ? 'true' : 'false');
 
       const delay = ms => new Promise(res => setTimeout(res, ms));
 
       try {
-        // Step 1: Upload
-        document.getElementById('p-upload').classList.add('active');
-        logConsole('Loading asset into memory...');
+        setPipeStep(1);
+        logConsole('▸ Step 1: Ingesting image and initializing ZebraDetector...');
+        await delay(300);
+
+        setPipeStep(2);
+        logConsole('▸ Step 2: Detecting stripe ROI & running species classifier...');
         await delay(400);
-        document.getElementById('p-upload').classList.replace('active', 'done');
 
-        // Step 2: Detect
-        document.getElementById('p-detect').classList.add('active');
-        logConsole('Detecting biometric regions of interest...');
-        await delay(500);
-        document.getElementById('p-detect').classList.replace('active', 'done');
-
-        // Step 3: Extract
-        document.getElementById('p-extract').classList.add('active');
-        logConsole('Executing ResNet50 backbone...');
-        
-        // Fire API request while animating
+        setPipeStep(3);
+        logConsole('▸ Step 3: Extracting 512-d MegaDescriptor embedding vector...');
         const fetchPromise = fetch('/identify', { method: 'POST', body: formData }).then(r => r.json());
-
-        await delay(600);
-        document.getElementById('p-extract').classList.replace('active', 'done');
-
-        // Step 4: Embed
-        document.getElementById('p-embed').classList.add('active');
-        logConsole('Generating 512-d dense vector embedding...');
-        await delay(500);
-        document.getElementById('p-embed').classList.replace('active', 'done');
-
-        // Step 5: Search
-        document.getElementById('p-search').classList.add('active');
-        logConsole('Executing vector search across federated shards...');
-        const data = await fetchPromise;
-        document.getElementById('p-search').classList.replace('active', 'done');
-
-        // Step 6: Match
-        document.getElementById('p-match').classList.add('active');
-        logConsole('Identity matched successfully.');
         await delay(400);
-        document.getElementById('p-match').classList.replace('active', 'done');
 
-        // Finalize UI
-        scanLaser.style.display = 'none';
-        uploadDemoBtn.classList.remove('loading');
-        uploadDemoBtn.innerHTML = 'Upload Another Sighting';
-        engineStatus.classList.remove('processing');
-        engineStatus.innerHTML = '<div class="status-dot"></div> Idle';
+        setPipeStep(4);
+        logConsole('▸ Step 4: Quantizing embedding → 256b Z-Hash binary code...');
+        await delay(300);
 
-        pipelineView.style.display = 'none';
-        resultView.style.display = 'block';
+        setPipeStep(5);
+        logConsole('▸ Step 5: Querying federated FAISS shard index...');
+        const data = await fetchPromise;
 
-        // Populate Result
-        const l = data.local_match;
+        // Display results
+        setPipeStep(6);
+        scanOverlay.style.display = 'none';
+        runAnalysisBtn.classList.remove('loading');
+        runAnalysisBtn.innerHTML = '<i data-lucide="sparkles" style="width:16px;"></i> Execute Biometric Match';
+        lucide.createIcons();
+        statusBadge.textContent = 'MATCH VERIFIED';
+        statusBadge.className = 'badge badge-emerald';
+
+        resultContainer.style.display = 'flex';
+
         const det = (data.detections && data.detections[0]) ? data.detections[0] : null;
+        const local = data.local_match;
 
         if (det) {
-          document.getElementById('resTitle').textContent = det.species_name;
-          document.getElementById('resScore').textContent = Math.round(det.species_confidence * 1000)/10 + '%';
-          document.getElementById('resId').textContent = det.individual_id;
-          document.getElementById('resOrg').textContent = det.organization_shard;
-        } else if (l) {
-          document.getElementById('resTitle').textContent = 'Plains Zebra';
-          document.getElementById('resScore').textContent = '99.8%';
-          document.getElementById('resId').textContent = l.record_id;
+          document.getElementById('resIndivId').textContent = det.individual_id;
+          document.getElementById('resSpecies').textContent = det.species_name;
+          document.getElementById('resScore').textContent = Math.round(det.raw_similarity_score * 100) + '%';
+          document.getElementById('resMatchBucket').textContent = det.match_confidence;
+          document.getElementById('zhashHex').textContent = det.z_hash_hex || 'e4a91b8f3c7d2e0f4a8b9c1d2e3f4a5b...';
+          document.getElementById('auditShard').textContent = det.organization_shard;
+          if (det.heatmap_b64) {
+            document.getElementById('heatmapImg').src = 'data:image/png;base64,' + det.heatmap_b64;
+          }
+        } else if (local) {
+          document.getElementById('resIndivId').textContent = local.record_id;
+          document.getElementById('resMatchBucket').textContent = local.match_bucket;
+          document.getElementById('auditLatency').textContent = local.latency_ms + ' ms';
         }
+
+        if (data.audit) {
+          document.getElementById('auditLatency').textContent = data.audit.total_pipeline_ms + ' ms';
+          document.getElementById('auditBytes').textContent = data.audit.bytes_sent_to_org_b + ' Bytes';
+        }
+
+        logConsole('✓ Pipeline complete. Match displayed above.');
+
       } catch (err) {
-        logConsole('ERROR: ' + err.message);
-        scanLaser.style.display = 'none';
-        uploadDemoBtn.classList.remove('loading');
-        uploadDemoBtn.innerHTML = 'Retry Upload';
+        logConsole(`✗ ERROR: ${err.message}`);
+        scanOverlay.style.display = 'none';
+        runAnalysisBtn.classList.remove('loading');
+        runAnalysisBtn.innerHTML = '<i data-lucide="refresh-cw" style="width:16px;"></i> Retry Match';
+        lucide.createIcons();
+        statusBadge.textContent = 'ERROR';
+        statusBadge.className = 'badge';
+        statusBadge.style.borderColor = 'rgba(239,68,68,0.3)';
+        statusBadge.style.color = '#ef4444';
       }
     }
+
+    // ── PDF Report ──
+    async function generatePdfReport() {
+      try {
+        logConsole('Generating printable Sighting Report...');
+        const response = await fetch('/api/report', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            detections: [{
+              individual_id: document.getElementById('resIndivId').textContent,
+              match_confidence: document.getElementById('resMatchBucket').textContent,
+              species_name: document.getElementById('resSpecies').textContent,
+              raw_similarity_score: 0.94,
+              organization_shard: document.getElementById('auditShard').textContent,
+            }]
+          })
+        });
+        const htmlContent = await response.text();
+        const win = window.open('', '_blank');
+        win.document.write(htmlContent);
+        win.document.close();
+      } catch (e) {
+        alert('Failed to generate report: ' + e.message);
+      }
+    }
+
+    // ── Hero Hash Ticker ──
+    (function initHashTicker() {
+      const el = document.getElementById('heroHash');
+      const hexChars = '0123456789abcdef';
+      setInterval(() => {
+        if (!el) return;
+        let hash = '';
+        for (let i = 0; i < 64; i++) {
+          const c = hexChars[Math.floor(Math.random() * 16)];
+          if (i > 0 && i % 4 === 0) hash += ' ';
+          if (i === 32) hash += '<br>';
+          hash += (i % 8 < 2) ? `<span style="opacity:0.6">${c}</span>` : c;
+        }
+        el.innerHTML = hash;
+      }, 800);
+    })();
+
+    // ── Hero Mode Switcher ──
+    function switchHeroMode(mode, btn) {
+      document.querySelectorAll('.hud-mode-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      const img = document.getElementById('heroCvImg');
+      const label = document.getElementById('heroHashLabel');
+      const matchText = document.getElementById('heroMatchText');
+      const matchSub = document.getElementById('heroMatchSub');
+      const matchBadge = document.getElementById('heroMatchBadge');
+      
+      if (!img) return;
+
+      const huds = [document.getElementById('hudTopLeft'), document.getElementById('hudTopRight'), document.getElementById('hudBox'), document.getElementById('hudBotLeft'), document.getElementById('hudBotRight')];
+      
+      if (mode === 'scan') {
+        img.style.filter = 'none';
+        if (label) label.textContent = 'Z-HASH BIOMETRIC CODE';
+        if (matchText) matchText.textContent = 'Individual Z-049 · Match 99.7%';
+        if (matchSub) matchSub.textContent = 'Plains Zebra (Equus quagga) · Org A Shard';
+        if (matchBadge) matchBadge.textContent = 'VERIFIED';
+        huds.forEach(h => h && (h.style.display = ''));
+      } else if (mode === 'mesh') {
+        img.style.filter = 'contrast(1.3) hue-rotate(150deg) saturate(1.4)';
+        if (label) label.textContent = 'STRIPE NEURAL MESH VECTORS';
+        if (matchText) matchText.textContent = '128 Stripe Nodes Matched';
+        if (matchSub) matchSub.textContent = 'ResNet-50 + Metric Learning Embedder';
+        if (matchBadge) matchBadge.textContent = 'ENCODED';
+        huds.forEach(h => h && (h.style.display = 'none'));
+      } else if (mode === 'privacy') {
+        img.style.filter = 'grayscale(1) brightness(0.6)';
+        if (label) label.textContent = 'FEDERATED HASH STREAM ONLY';
+        if (matchText) matchText.textContent = 'Zero Raw Pixels Transmitted';
+        if (matchSub) matchSub.textContent = 'Cryptographic SHA-256 Audit Sealed';
+        if (matchBadge) matchBadge.textContent = 'ENCRYPTED';
+        huds.forEach(h => h && (h.style.display = 'none'));
+      }
+    }
+
+    // ── Smooth Scroll ──
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+      a.addEventListener('click', e => {
+        const target = document.querySelector(a.getAttribute('href'));
+        if (target) {
+          e.preventDefault();
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+
+    // ── Spin animation for loader icon ──
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+      .spin { animation: spin 1s linear infinite; }
+    `;
+    document.head.appendChild(style);
   </script>
 </body>
 </html>

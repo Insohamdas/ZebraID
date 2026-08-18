@@ -74,6 +74,7 @@ AUDIT_DB_PATH = os.environ.get("AUDIT_DB_PATH", "results/audit_log.sqlite")
 
 
 def _get_audit_db() -> sqlite3.Connection:
+    Path(AUDIT_DB_PATH).parent.mkdir(parents=True, exist_ok=True)
     db = sqlite3.connect(AUDIT_DB_PATH, check_same_thread=False)
     db.execute("""
         CREATE TABLE IF NOT EXISTS query_log (

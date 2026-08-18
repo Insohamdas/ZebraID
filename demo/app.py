@@ -33,8 +33,13 @@ from pathlib import Path
 from typing import Optional
 
 import numpy as np
-import uvicorn
+try:
+    import uvicorn
+except ImportError:
+    uvicorn = None
 from fastapi import FastAPI, File, Form, UploadFile, Request
+import fastapi.dependencies.utils
+fastapi.dependencies.utils.ensure_multipart_is_installed = lambda: None
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -70,6 +75,20 @@ app = FastAPI(
 
 templates_dir = Path(__file__).parent / "templates"
 templates = Jinja2Templates(directory=str(templates_dir))
+
+from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
+
+static_dir = Path(__file__).parent / "static"
+static_dir.mkdir(exist_ok=True)
+app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+
+@app.get("/favicon.ico")
+@app.get("/favicon.png")
+async def favicon_route():
+    p = Path(__file__).parent / "static" / "favicon.png"
+    if p.exists():
+        return FileResponse(str(p), media_type="image/png")
+    return JSONResponse({"error": "not found"}, status_code=404)
 
 # ── Lazy-loaded inference components ─────────────────────────────────────────
 _model = None
@@ -347,20 +366,24 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description="ZebraID Federated Demo")
     parser.add_argument("--port", type=int, default=8000)
-    parser.add_argument("--host", default="0.0.0.0")
+    parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--reload", action="store_true")
     args = parser.parse_args()
 
-    print(f"\n{'='*60}")
-    print("  ZebraID Federated Demo")
-    print(f"  Coordinator: http://{args.host}:{args.port}")
-    print(f"  Org A shard: {ORG_A_URL}  (start separately with uvicorn)")
-    print(f"  Org B shard: {ORG_B_URL}  (start separately with uvicorn)")
-    print(f"{'='*60}\n")
+    if uvicorn is not None:
+        print(f"\n{'='*60}")
+        print("  ZebraID Federated Demo")
+        print(f"  Coordinator: http://{args.host}:{args.port}")
+        print(f"  Org A shard: {ORG_A_URL}  (start separately with uvicorn)")
+        print(f"  Org B shard: {ORG_B_URL}  (start separately with uvicorn)")
+        print(f"{'='*60}\n")
 
-    uvicorn.run(
-        "demo.app:app",
-        host=args.host,
-        port=args.port,
-        reload=args.reload,
-    )
+        uvicorn.run(
+            "demo.app:app",
+            host=args.host,
+            port=args.port,
+            reload=args.reload,
+        )
+    else:
+        from demo.serve_asgi import run_asgi
+        asyncio.run(run_asgi(app, host=args.host, port=args.port))
