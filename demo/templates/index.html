@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ZebraID — Nature's Barcode, Decoded</title>
+  <title>ZebraID — Computational Wildlife Identification</title>
   <meta name="description" content="The open-source AI platform that turns zebra stripe photography into 256-bit Z-Hash biometric codes for instant, privacy-preserving population matching across continents.">
 
   <!-- Fonts -->
@@ -14,7 +14,24 @@
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 
   <!-- Favicon -->
-  <link rel="icon" type="image/png" href="/static/zebraid_favicon.png">
+  <link id="dynamic-favicon" rel="icon" type="image/png" href="/static/favicon-light.png" />
+  <link rel="icon" type="image/png" href="/static/favicon-dark.png" media="(prefers-color-scheme: light)" />
+  <link rel="icon" type="image/png" href="/static/favicon-light.png" media="(prefers-color-scheme: dark)" />
+  <script>
+    (function() {
+      const darkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+      function updateFavicon() {
+        const isDark = darkScheme.matches;
+        const iconUrl = (isDark ? '/static/favicon-light.png' : '/static/favicon-dark.png') + '?t=' + (isDark ? 'dark' : 'light');
+        const favicon = document.getElementById('dynamic-favicon');
+        if (favicon) {
+          favicon.href = iconUrl;
+        }
+      }
+      try { darkScheme.addEventListener('change', updateFavicon); } catch (e) { darkScheme.addListener(updateFavicon); }
+      updateFavicon();
+    })();
+  </script>
 
   <style>
     /* ==========================================================================
@@ -195,7 +212,7 @@
        HERO SECTION
        ========================================================================== */
     .hero {
-      position: relative; min-height: 100vh; padding: 140px 48px 80px;
+      position: relative; min-height: 100vh; padding: 100px 48px 80px;
       display: flex; align-items: center; overflow: hidden;
     }
     .hero-bg {
@@ -259,216 +276,136 @@
       font-size: 18px; line-height: 1.7; color: var(--text-secondary);
       margin-bottom: 40px; max-width: 480px;
     }
-    .hero-actions { display: flex; gap: 16px; flex-wrap: wrap; }
+    .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
 
-    /* ── Hero Visual — Stripe-to-Hash Animation ── */
-    /* ── Hero Visual — Clean Biometric Interface ── */
-    .hero-visual {
-      display: flex; justify-content: center; align-items: center;
+            /* ── Compact Dashboard Preview ── */
+    .dashboard-preview {
+      width: 100%;
+      max-width: 530px;
+      aspect-ratio: 4 / 3;
+      background: #080909;
+      border: 1px solid rgba(0, 217, 255, 0.15);
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 217, 255, 0.05);
+      display: flex;
+      flex-direction: column;
+      font-family: var(--font-mono);
       position: relative;
     }
-    .stripe-card {
-      width: 530px; border-radius: var(--radius-xl);
-      background: rgba(14, 14, 14, 0.85);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
-      overflow: hidden; position: relative;
-      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.7);
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+    /* Minimal Top Header */
+    .preview-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: rgba(11, 13, 14, 0.8);
+      border-bottom: 1px solid rgba(0, 217, 255, 0.1);
+      z-index: 10;
     }
-    .stripe-card:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 32px 80px rgba(0, 0, 0, 0.8), 0 0 30px rgba(212, 168, 83, 0.2);
+    .preview-header-left {
+      display: flex; align-items: center; gap: 8px;
+    }
+    .live-dot {
+      width: 6px; height: 6px; border-radius: 50%; background: #20D9A0;
+      box-shadow: 0 0 8px #20D9A0;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    .preview-title {
+      font-size: 10px; color: #E0B565; letter-spacing: 1.5px;
+    }
+    .preview-id {
+      font-size: 10px; color: #E0B565; letter-spacing: 1.5px; font-weight: 500;
+      border: 1px solid rgba(0, 217, 255, 0.3); padding: 2px 8px; border-radius: 3px;
+      background: rgba(0, 217, 255, 0.05);
     }
 
-    .cv-viewport {
-      position: relative; width: 100%; aspect-ratio: 16 / 9; overflow: hidden;
-      background: #000;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    /* Central Visual */
+    .preview-visual {
+      position: relative; flex: 1; overflow: hidden; background: #000;
     }
-
-    /* ── HUD Overlays ── */
-    .hud-overlay {
-      position: absolute; top: 12px;
-      background: rgba(4, 7, 10, 0.85);
-      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-      border: 1px solid rgba(34, 211, 238, 0.15);
-      display: flex; gap: 16px; padding: 8px 16px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    .preview-img {
+      width: 100%; height: 100%; object-fit: cover; object-position: 70% center;
+      opacity: 0.95; filter: saturate(0.6) contrast(1.15) brightness(0.95) hue-rotate(5deg);
     }
-    .hud-top-left { left: 12px; border-left: 3px solid #22d3ee; border-radius: 0 4px 4px 0; }
-    .hud-top-right { right: 12px; border-right: 3px solid #22d3ee; border-radius: 4px 0 0 4px; }
     
-    .hud-block { display: flex; flex-direction: column; justify-content: space-between; position: relative; }
-    .hud-block:not(:last-child)::after {
-      content: ''; position: absolute; right: -8px; top: 10%; height: 80%; width: 1px; background: rgba(255,255,255,0.1);
-    }
-    .text-right { text-align: right; }
-    .text-left { text-align: left !important; }
-    .hud-label { font-family: var(--font-mono); font-size: 7px; color: rgba(255,255,255,0.4); letter-spacing: 1.5px; margin-bottom: 2px; }
-    .hud-val { font-family: var(--font-mono); font-size: 10px; color: rgba(255,255,255,0.9); font-weight: 500; letter-spacing: 0.5px; }
-    .text-green { color: #34d399; }
-    .text-cyan { color: #22d3ee; }
 
-    .hud-panel {
-      position: absolute; bottom: 12px;
-      background: rgba(4, 7, 10, 0.85);
-      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-      padding: 12px; border-radius: 2px;
-      border: 1px solid rgba(34, 211, 238, 0.2);
-    }
-    .hud-panel::after {
-      content: ''; position: absolute; top: -1px; left: -1px; right: -1px; bottom: -1px;
-      background: linear-gradient(to right, #22d3ee 1px, transparent 1px) 0 0,
-                  linear-gradient(to right, #22d3ee 1px, transparent 1px) 0 100%,
-                  linear-gradient(to left, #22d3ee 1px, transparent 1px) 100% 0,
-                  linear-gradient(to left, #22d3ee 1px, transparent 1px) 100% 100%,
-                  linear-gradient(to bottom, #22d3ee 1px, transparent 1px) 0 0,
-                  linear-gradient(to bottom, #22d3ee 1px, transparent 1px) 100% 0,
-                  linear-gradient(to top, #22d3ee 1px, transparent 1px) 0 100%,
-                  linear-gradient(to top, #22d3ee 1px, transparent 1px) 100% 100%;
-      background-repeat: no-repeat; background-size: 8px 8px;
+    /* Vignette Overlay */
+    .preview-visual::after {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(circle at center, transparent 30%, rgba(0,0,0,0.7) 120%);
       pointer-events: none; z-index: 1;
     }
-    .hud-bottom-left { left: 12px; width: 150px; }
-    .hud-bottom-right { right: 12px; width: 190px; }
+    /* Subtle Scanline */
+    .p-scanline {
+      position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(0, 217, 255, 0.4), transparent);
+      box-shadow: 0 0 6px rgba(0, 217, 255, 0.2);
+      animation: scan-anim 4s linear infinite; z-index: 2;
+    }
+    @keyframes scan-anim {
+      0% { top: -5%; opacity: 0; }
+      10% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { top: 105%; opacity: 0; }
+    }
+    
+    /* Subtle Framing Brackets */
+    .p-frame { position: absolute; width: 30px; height: 30px; border: 1px solid #E0B565; z-index: 2;}
+    .pf-tl { top: 20px; left: 20px; border-right: none; border-bottom: none; }
+    .pf-tr { top: 20px; right: 20px; border-left: none; border-bottom: none; }
+    .pf-bl { bottom: 20px; left: 20px; border-right: none; border-top: none; }
+    .pf-br { display: none; }
 
-    .hud-panel-title {
-      font-family: var(--font-mono); font-size: 8px; color: #22d3ee;
-      letter-spacing: 1.5px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;
-      text-transform: uppercase; border-bottom: 1px solid rgba(34, 211, 238, 0.2); padding-bottom: 4px;
+    /* Floating Data Panel */
+    .preview-data-panel {
+      position: absolute;
+      bottom: 20px; right: 20px;
+      width: 220px;
+      background: rgba(8, 9, 9, 0.55);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(0, 217, 255, 0.08);
+      border-radius: 12px;
+      padding: 12px 14px;
+      z-index: 5;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
     }
-    .hud-map-mock {
-      height: 48px; border-radius: 2px;
-      display: flex; align-items: center; justify-content: center; margin-bottom: 8px;
-      border: 1px solid rgba(255,255,255,0.08); position: relative;
-      background-image: radial-gradient(rgba(34, 211, 238, 0.1) 1px, transparent 1px); background-size: 8px 8px;
-    }
-    .hud-panel-footer { font-family: var(--font-mono); font-size: 8px; color: rgba(255,255,255,0.5); letter-spacing: 0.5px; }
+    .p-table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
+    .p-table tr td { padding: 4px 0; font-size: 10px; color: #E0B565; letter-spacing: 0.5px; }
+    .p-table tr td:last-child { text-align: right; color: #E0B565; }
+    .p-table td.bold { font-weight: 600; }
+    
+    .p-divider { height: 1px; background: rgba(255,255,255,0.08); margin: 8px 0; }
+    
+    .p-conf-row { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 12px;}
+    .p-conf-lbl { font-size: 9px; color: #E0B565; letter-spacing: 1px; margin-bottom: 2px;}
+    .p-conf-val { font-size: 20px; font-weight: 700; color: #E0B565; line-height: 1;}
+    .p-verify { display: flex; align-items: center; gap: 4px; color: #E0B565; font-size: 9px; font-weight: 600; letter-spacing: 1px;}
 
-    .hud-table { width: 100%; border-collapse: collapse; }
-    .hud-table td { font-family: var(--font-mono); font-size: 9px; color: rgba(255,255,255,0.5); padding: 3px 0; }
-    .hud-table td.text-right { color: rgba(255,255,255,0.9); text-align: right; font-weight: 500; }
-
-    .hud-bounding-box {
-      position: absolute; top: 22%; left: 32%; width: 36%; height: 56%;
-      border: 1px solid rgba(34, 211, 238, 0.4);
-      background: rgba(34, 211, 238, 0.05);
-      pointer-events: none;
+    /* Left Side Adjustments */
+    .hero-inner { 
+      grid-template-columns: 48% 52%; 
+      gap: 60px; 
+      max-width: 1400px; 
+      align-items: center;
     }
-    .hud-bounding-box::before {
-      content: ''; position: absolute; top: -2px; left: -2px; right: -2px; bottom: -2px;
-      background: linear-gradient(to right, #22d3ee 2px, transparent 2px) 0 0,
-                  linear-gradient(to right, #22d3ee 2px, transparent 2px) 0 100%,
-                  linear-gradient(to left, #22d3ee 2px, transparent 2px) 100% 0,
-                  linear-gradient(to left, #22d3ee 2px, transparent 2px) 100% 100%,
-                  linear-gradient(to bottom, #22d3ee 2px, transparent 2px) 0 0,
-                  linear-gradient(to bottom, #22d3ee 2px, transparent 2px) 100% 0,
-                  linear-gradient(to top, #22d3ee 2px, transparent 2px) 0 100%,
-                  linear-gradient(to top, #22d3ee 2px, transparent 2px) 100% 100%;
-      background-repeat: no-repeat; background-size: 16px 16px;
+    .hero-content { max-width: 540px; margin: 0 auto; }
+    .hero-title { 
+      font-size: clamp(48px, 5vw, 78px); 
+      line-height: 0.98; 
+      letter-spacing: -0.04em; 
     }
-    .hud-bb-label {
-      position: absolute; top: -16px; left: -1px;
-      background: rgba(4,7,10,0.9); border: 1px solid #22d3ee; border-bottom: none;
-      font-family: var(--font-mono); font-size: 8px; color: #22d3ee;
-      padding: 2px 8px; letter-spacing: 1px; white-space: nowrap;
+    .hero-sub {
+      font-size: 17px;
+      line-height: 1.7;
     }
-    .cv-viewport-img {
-      width: 100%; height: 100%; object-fit: cover;
-      display: block; opacity: 0.98;
-      transition: filter 0.3s ease;
-    }
-
-    .hash-output {
-      padding: 24px;
-      background: transparent;
-    }
-    .hash-label {
-      font-family: var(--font-mono); font-size: 13px; letter-spacing: 2px;
-      color: var(--accent-text); text-transform: uppercase; margin-bottom: 16px;
-      display: flex; align-items: center; justify-content: space-between;
-      font-weight: 500;
-    }
-    .hud-mode-tabs {
-      display: flex; gap: 6px;
-    }
-    .hud-mode-btn {
-      background: transparent; border: 1px solid rgba(255, 255, 255, 0.15);
-      color: var(--text-muted); font-family: var(--font-body); font-size: 12px; font-weight: 500;
-      padding: 4px 14px; border-radius: var(--radius-pill); cursor: pointer;
-      transition: all 0.2s ease;
-    }
-    .hud-mode-btn:hover { color: var(--text-primary); border-color: rgba(255, 255, 255, 0.3); }
-    .hud-mode-btn.active {
-      border-color: var(--accent); color: var(--accent-text);
-      background: rgba(212, 168, 83, 0.1);
-    }
-
-    .hash-value {
-      font-family: var(--font-mono); font-size: 14px; color: #34d399;
-      line-height: 1.8; letter-spacing: 1px;
-      background: #050505; padding: 16px 20px; border-radius: var(--radius-md);
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      margin-bottom: 16px;
-    }
-    .hash-match {
-      padding: 16px 20px; border-radius: var(--radius-md);
-      background: rgba(52, 211, 153, 0.06); border: 1px solid rgba(52, 211, 153, 0.3);
-      display: flex; align-items: center; justify-content: space-between;
-    }
-    .hash-match-left { display: flex; align-items: center; gap: 14px; }
-    .hash-match-icon {
-      width: 32px; height: 32px; border-radius: 50%;
-      background: #34d399; display: flex; align-items: center; justify-content: center;
-      color: #050505; flex-shrink: 0;
-    }
-    .hash-match-text { font-size: 15px; font-weight: 600; color: #34d399; letter-spacing: 0.2px; }
-    .hash-match-id { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
-    .hash-match-badge {
-      font-family: var(--font-body); font-size: 11px; font-weight: 600;
-      padding: 4px 12px; border-radius: var(--radius-pill);
-      background: transparent; border: 1px solid var(--accent);
-      color: var(--accent-text); letter-spacing: 0.5px;
-    }
-
-    /* Decorative glow behind card */
-    .stripe-card-glow {
-      position: absolute; width: 460px; height: 520px;
-      border-radius: var(--radius-xl);
-      background: radial-gradient(ellipse, var(--accent-glow) 0%, transparent 70%);
-      filter: blur(60px); z-index: -1;
-      animation: glow-pulse 4s ease-in-out infinite;
-    }
-    @keyframes glow-pulse {
-      0%, 100% { opacity: 0.3; transform: scale(1); }
-      50% { opacity: 0.6; transform: scale(1.05); }
-    }
-
-    /* ── Stats Row ── */
-    .hero-stats {
-      position: relative; z-index: 1;
-      max-width: 1280px; margin: 0 auto; padding: 0 48px;
-      margin-top: -20px;
-    }
-    .stats-row {
-      display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px;
-      background: var(--border); border-radius: var(--radius-lg); overflow: hidden;
-      border: 1px solid var(--border);
-    }
-    .stat-cell {
-      padding: 28px 32px; background: var(--canvas-elevated);
-      text-align: center; transition: background 0.3s;
-    }
-    .stat-cell:hover { background: var(--canvas-overlay); }
-    .stat-val {
-      font-family: var(--font-display); font-size: 32px; font-weight: 700;
-      color: var(--text-primary); letter-spacing: -1px;
-    }
-    .stat-val span { color: var(--accent-text); }
-    .stat-lbl {
-      font-size: 13px; color: var(--text-muted); margin-top: 4px;
-      letter-spacing: 0.5px;
+    
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .hero-inner { grid-template-columns: 1fr; gap: 48px; }
+      .hero-title { font-size: 48px; }
+      .dashboard-preview { margin: 0 auto; }
     }
 
     /* ==========================================================================
@@ -746,7 +683,7 @@
     /* Privacy Toggle */
     .privacy-toggle {
       display: flex; align-items: center; justify-content: space-between;
-      padding: 16px; border-radius: var(--radius-md);
+      padding: 12px 14px; border-radius: var(--radius-md);
       background: var(--surface-card); border: 1px solid var(--border);
       margin-bottom: 16px;
     }
@@ -796,7 +733,7 @@
 
     .match-header {
       display: flex; justify-content: space-between; align-items: flex-start;
-      padding: 24px; border-radius: var(--radius-lg);
+      padding: 20px; border-radius: var(--radius-lg);
       background: var(--surface-card); border: 1px solid var(--border);
     }
     .match-id {
@@ -819,7 +756,7 @@
 
     .zhash-payload {
       font-family: var(--font-mono); font-size: 12px; color: var(--emerald);
-      padding: 16px; margin-top: 8px;
+      padding: 12px 14px; margin-top: 8px;
       background: rgba(0,0,0,0.3); border-radius: var(--radius-md);
       border: 1px solid var(--border); word-break: break-all;
       line-height: 1.8;
@@ -829,7 +766,7 @@
       display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;
     }
     .audit-card {
-      padding: 16px; border-radius: var(--radius-md);
+      padding: 12px 14px; border-radius: var(--radius-md);
       background: var(--surface-card); border: 1px solid var(--border);
     }
     .audit-val {
@@ -840,7 +777,7 @@
 
     /* Console Log */
     .console-log {
-      margin-top: 20px; padding: 16px;
+      margin-top: 20px; padding: 12px 14px;
       background: rgba(0,0,0,0.4); border-radius: var(--radius-md);
       border: 1px solid var(--border);
       max-height: 200px; overflow-y: auto;
@@ -953,111 +890,52 @@
           </div>
         </div>
 
-        <!-- Right: Animated Computer Vision Biometric Visual -->
+                        <!-- Right: Compact Dashboard Preview -->
         <div class="hero-visual">
-          <div class="stripe-card-glow"></div>
-          
-          <div class="stripe-card">
-            <div class="cv-viewport">
-              <img src="/static/hero_biometric_scan.jpg" alt="ZebraID Biometric Computer Vision Scanner" class="cv-viewport-img" id="heroCvImg">
+          <div class="dashboard-preview">
+            
+            <!-- Minimal Header -->
+            <div class="preview-header">
+              <div class="preview-header-left">
+                <span class="live-dot"></span>
+                <span class="preview-title">LIVE BIOMETRIC SCAN</span>
+              </div>
+              <div class="preview-id">ZEBRA-049</div>
+            </div>
+
+            <!-- Central Visual -->
+            <div class="preview-visual">
+              <div class="p-frame pf-tl"></div>
+              <div class="p-frame pf-tr"></div>
+              <div class="p-frame pf-bl"></div>
+              <div class="p-frame pf-br"></div>
               
-              <!-- HUD Overlays -->
-              <div class="hud-overlay hud-top-left" id="hudTopLeft">
-                <div class="hud-block"><span class="hud-label">STATUS</span><span class="hud-val text-green">ACTIVE</span></div>
-                <div class="hud-block"><span class="hud-label">UNIT</span><span class="hud-val">CV-WLF-73</span></div>
-                <div class="hud-block"><span class="hud-label">DATE</span><span class="hud-val">25 AUG 2026</span></div>
-                <div class="hud-block"><span class="hud-label">TIME</span><span class="hud-val">14:32:01</span></div>
-              </div>
-
-              <div class="hud-overlay hud-top-right" id="hudTopRight">
-                <div class="hud-block text-left">
-                  <span class="hud-label">SYSTEM STATUS</span>
-                  <span class="hud-val"><span class="text-green">ONLINE</span> | CONN: STABLE</span>
-                </div>
-                <div class="hud-block text-right">
-                  <span class="hud-label">SAT</span><span class="hud-val">5</span>
-                </div>
-                <div class="hud-block text-right">
-                  <span class="hud-label">BAT</span><span class="hud-val text-green">91%</span>
-                </div>
-              </div>
-
-              <div class="hud-bounding-box" id="hudBox">
-                <div class="hud-bb-label">ID: AEQ-ZBR-049 | CONF: 99.4%</div>
-              </div>
-
-              <div class="hud-panel hud-bottom-left" id="hudBotLeft">
-                <div class="hud-panel-title">MAP <i data-lucide="map-pin" style="width:10px;"></i></div>
-                <div class="hud-map-mock">
-                  <i data-lucide="globe-2" style="width: 24px; height: 24px; color: rgba(34, 211, 238, 0.4);"></i>
-                </div>
-                <div class="hud-panel-footer">GPS 08.5714S, 36.3501E</div>
-              </div>
-
-              <div class="hud-panel hud-bottom-right" id="hudBotRight">
-                <div class="hud-panel-title">BIOMETRIC ANALYSIS</div>
-                <table class="hud-table">
-                  <tr><td>Subject:</td><td class="text-right">ZEBRA-049</td></tr>
-                  <tr><td>Sex:</td><td class="text-right">Female</td></tr>
-                  <tr><td>Stripe ID:</td><td class="text-right">Z049-M2</td></tr>
-                  <tr><td>Confidence:</td><td class="text-right">99.7%</td></tr>
-                  <tr><td>Location:</td><td class="text-right">08°34'S, 36°21'E</td></tr>
+              <img src="/static/hero_biometric_scan.jpg" class="preview-img" alt="Zebra">
+              
+              <!-- Floating Info Panel -->
+              <div class="preview-data-panel">
+                <table class="p-table">
+                  <tr><td>SPECIES</td><td class="bold">Equus quagga</td></tr>
+                  <tr><td>SEX</td><td class="bold">Female</td></tr>
+                  <tr><td>LOCATION</td><td class="bold">08.57° S, 36.35° E</td></tr>
                 </table>
+                <div class="p-divider"></div>
+                <div class="p-conf-row">
+                  <div>
+                    <div class="p-conf-lbl">CONFIDENCE</div>
+                    <div class="p-conf-val">99.7%</div>
+                  </div>
+                  <div class="p-verify">
+                    <i data-lucide="check-circle-2" style="width:14px;"></i> VERIFIED
+                  </div>
+                </div>
               </div>
             </div>
             
-            <div class="hash-output">
-              <div class="hash-label">
-                <span id="heroHashLabel">Z-HASH BIOMETRIC CODE</span>
-                <div class="hud-mode-tabs">
-                  <button class="hud-mode-btn active" onclick="switchHeroMode('scan', this)">Scan</button>
-                  <button class="hud-mode-btn" onclick="switchHeroMode('mesh', this)">Mesh</button>
-                  <button class="hud-mode-btn" onclick="switchHeroMode('privacy', this)">Shield</button>
-                </div>
-              </div>
-              <div class="hash-value" id="heroHash">
-                10d7 810d e8a2 7942 e1aa c4f2 6d1d c333<br>
-                81cb 5a56 294d e942 fd68 abb1 8e78 7ad3
-              </div>
-              <div class="hash-match">
-                <div class="hash-match-left">
-                  <div class="hash-match-icon">
-                    <i data-lucide="check" style="width:16px; stroke-width: 3;"></i>
-                  </div>
-                  <div>
-                    <div class="hash-match-text" id="heroMatchText">Individual Z-049 · Match 99.7%</div>
-                    <div class="hash-match-id" id="heroMatchSub">Plains Zebra (Equus quagga) · Org A Shard</div>
-                  </div>
-                </div>
-                <div class="hash-match-badge" id="heroMatchBadge">VERIFIED</div>
-              </div>
-            </div>
           </div>
         </div>
       </div>
     </section>
-
-    <!-- ── STATS ROW ── -->
-    <div class="hero-stats">
-      <div class="stats-row">
-        <div class="stat-cell">
-          <div class="stat-val">99.4<span>%</span></div>
-          <div class="stat-lbl">mAP@1 Accuracy</div>
-        </div>
-        <div class="stat-cell">
-          <div class="stat-val">256<span>b</span></div>
-          <div class="stat-lbl">Z-Hash Biometric Code</div>
-        </div>
-        <div class="stat-cell">
-          <div class="stat-val">&lt;5<span>ms</span></div>
-          <div class="stat-lbl">Federated Query Latency</div>
-        </div>
-        <div class="stat-cell">
-          <div class="stat-val">0<span>%</span></div>
-          <div class="stat-lbl">Raw Data Leakage</div>
-        </div>
-      </div>
-    </div>
 
     <!-- ── HOW IT WORKS ── -->
     <section class="section" id="how-it-works">
@@ -1616,7 +1494,7 @@
       
       if (!img) return;
 
-      const huds = [document.getElementById('hudTopLeft'), document.getElementById('hudTopRight'), document.getElementById('hudBox'), document.getElementById('hudBotLeft'), document.getElementById('hudBotRight')];
+      const huds = [document.getElementById('hudTopBar'), document.getElementById('hudBox'), document.getElementById('hudBotLeft'), document.getElementById('hudBotRight')];
       
       if (mode === 'scan') {
         img.style.filter = 'none';

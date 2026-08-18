@@ -84,8 +84,20 @@ app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
 @app.get("/favicon.ico")
 @app.get("/favicon.png")
-async def favicon_route():
-    p = Path(__file__).parent / "static" / "favicon.png"
+@app.get("/favicon-dark.png")
+@app.get("/favicon-light.png")
+async def favicon_route(request: Request = None):
+    # If a specific theme icon is requested, return it
+    if request:
+        path_name = request.url.path.strip("/")
+        if path_name in ["favicon-dark.png", "favicon-light.png"]:
+            target = static_dir / path_name
+            if target.exists():
+                return FileResponse(str(target), media_type="image/png")
+    
+    p = static_dir / "favicon-light.png"
+    if not p.exists():
+        p = static_dir / "favicon.png"
     if p.exists():
         return FileResponse(str(p), media_type="image/png")
     return JSONResponse({"error": "not found"}, status_code=404)
